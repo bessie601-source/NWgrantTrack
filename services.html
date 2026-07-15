@@ -8,19 +8,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    /* One Tree Locale Brand Colors */
+    /* One Tree Locale Brand Colours — from brand palette (Slide2) */
     :root {
-      --otl-gold: #C9A227;
-      --otl-olive: #6B7B3D;
-      --otl-forest: #2D4A3E;
-      --otl-earth: #5C4A3D;
-      --otl-sand: #E8DCC8;
-      --otl-cream: #FAF7F0;
-      --otl-charcoal: #2C2C2C;
-      --otl-urgent: #B85450;
-      --otl-success: #6B7B3D;
-      --otl-muted: #8B7355;
-      --shadow-lg: 0 4px 20px rgba(45, 74, 62, 0.12);
+      /* Core palette */
+      --otl-pale-sage: #d0ddb9;
+      --otl-sage:      #5d7c41;
+      --otl-green:     #9cb86c;
+      --otl-sky:       #6569a0;
+      --otl-blue:      #515a97;
+      --otl-pale-pink: #f2dee9;
+      --otl-pink:      #c779a1;
+      --otl-fuchsia:   #d00670;
+      --otl-purple:    #3b2a5e;
+      --otl-violet:    #79447f;
+      --otl-grape:     #543772;
+      --otl-dark-grey: #494258;
+
+      /* Semantic roles (names kept for backwards compatibility) */
+      --otl-forest:   #3b2a5e;  /* deep anchor — was forest green, now purple */
+      --otl-olive:    #5d7c41;  /* mid green */
+      --otl-gold:     #d00670;  /* accent/CTA — was gold, now fuchsia */
+      --otl-earth:    #543772;  /* secondary deep — grape */
+      --otl-sand:     #d0ddb9;  /* light fill — pale sage */
+      --otl-cream:    #f2dee9;  /* page background — pale pink */
+      --otl-charcoal: #494258;  /* body text — dark grey */
+      --otl-muted:    #79447f;  /* muted text — violet */
+
+      /* Status */
+      --otl-urgent:   #d00670;
+      --otl-warning:  #c779a1;
+      --otl-success:  #5d7c41;
+
+      /* Aliases used in markup */
+      --color-forest: var(--otl-forest);
+      --color-muted:  var(--otl-muted);
+
+      --shadow:    0 2px 8px rgba(59, 42, 94, 0.08);
+      --shadow-lg: 0 4px 20px rgba(59, 42, 94, 0.14);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -110,7 +134,7 @@
     }
 
     .btn-primary:hover {
-      background: #B8941F;
+      background: var(--otl-fuchsia);
       transform: translateY(-2px);
     }
 
@@ -201,7 +225,7 @@
     .credibility-label { color: var(--color-muted); font-size: 0.95rem; }
 
     .testimonial {
-      background: linear-gradient(135deg, #1a3d28 0%, var(--color-forest) 100%);
+      background: linear-gradient(135deg, #2a1d44 0%, var(--color-forest) 100%);
       color: white;
       text-align: center;
     }
@@ -260,15 +284,15 @@
     .cta p { font-size: 1.125rem; opacity: 0.9; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; }
 
     footer {
-      background: #111827;
-      color: #9ca3af;
+      background: var(--otl-purple);
+      color: var(--otl-pale-sage);
       padding: 3rem 2rem;
       text-align: center;
     }
 
     footer .container { max-width: 1100px; margin: 0 auto; }
     footer p { margin-bottom: 0.5rem; }
-    footer a { color: #d1d5db; text-decoration: none; }
+    footer a { color: var(--otl-pale-pink); text-decoration: none; }
     footer a:hover { color: white; }
 
     @media (max-width: 768px) {
@@ -386,7 +410,7 @@
         </div>
       </div>
 
-      <div style="margin-top: 4rem; background: #f9fafb; padding: 2rem; border-radius: 1rem;">
+      <div style="margin-top: 4rem; background: var(--otl-pale-pink); padding: 2rem; border-radius: 1rem;">
         <h3 style="color: var(--color-forest); margin-bottom: 1rem; font-size: 1.5rem;">Specialist Areas</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
           <div style="display: flex; align-items: center; gap: 0.75rem;">

@@ -8,21 +8,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    /* One Tree Locale Brand Colors */
+    /* One Tree Locale Brand Colours — from brand palette (Slide2) */
     :root {
-      --otl-gold: #C9A227;
-      --otl-olive: #6B7B3D;
-      --otl-forest: #2D4A3E;
-      --otl-earth: #5C4A3D;
-      --otl-sand: #E8DCC8;
-      --otl-cream: #FAF7F0;
-      --otl-charcoal: #2C2C2C;
-      --otl-urgent: #B85450;
-      --otl-warning: #D4A84B;
-      --otl-success: #6B7B3D;
-      --otl-muted: #8B7355;
-      --shadow: 0 2px 8px rgba(45, 74, 62, 0.08);
-      --shadow-lg: 0 4px 20px rgba(45, 74, 62, 0.12);
+      /* Core palette */
+      --otl-pale-sage: #d0ddb9;
+      --otl-sage:      #5d7c41;
+      --otl-green:     #9cb86c;
+      --otl-sky:       #6569a0;
+      --otl-blue:      #515a97;
+      --otl-pale-pink: #f2dee9;
+      --otl-pink:      #c779a1;
+      --otl-fuchsia:   #d00670;
+      --otl-purple:    #3b2a5e;
+      --otl-violet:    #79447f;
+      --otl-grape:     #543772;
+      --otl-dark-grey: #494258;
+
+      /* Semantic roles (names kept for backwards compatibility) */
+      --otl-forest:   #3b2a5e;  /* deep anchor — was forest green, now purple */
+      --otl-olive:    #5d7c41;  /* mid green */
+      --otl-gold:     #d00670;  /* accent/CTA — was gold, now fuchsia */
+      --otl-earth:    #543772;  /* secondary deep — grape */
+      --otl-sand:     #d0ddb9;  /* light fill — pale sage */
+      --otl-cream:    #f2dee9;  /* page background — pale pink */
+      --otl-charcoal: #494258;  /* body text — dark grey */
+      --otl-muted:    #79447f;  /* muted text — violet */
+
+      /* Status */
+      --otl-urgent:   #d00670;
+      --otl-warning:  #c779a1;
+      --otl-success:  #5d7c41;
+
+      /* Aliases used in markup */
+      --color-forest: var(--otl-forest);
+      --color-muted:  var(--otl-muted);
+
+      --shadow:    0 2px 8px rgba(59, 42, 94, 0.08);
+      --shadow-lg: 0 4px 20px rgba(59, 42, 94, 0.14);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -152,7 +174,7 @@
       color: white;
     }
 
-    .btn-gold:hover { background: #B8941F; }
+    .btn-gold:hover { background: #a80559; }
 
     .btn-filter {
       background: white;
@@ -245,15 +267,15 @@
 
     .badge-urgent { background: #FEF2F2; color: var(--otl-urgent); }
     .badge-warning { background: #FEFBE8; color: var(--otl-warning); }
-    .badge-soon { background: #EFF6FF; color: #1E40AF; }
+    .badge-soon { background: var(--otl-pale-sage); color: var(--otl-blue); }
     .badge-open { background: #F0FDF4; color: var(--otl-success); }
     .badge-closed { background: #F3F4F6; color: var(--otl-muted); }
     .badge-funded { background: #F0FDF4; color: var(--otl-success); }
-    .badge-category { background: #EDE9FE; color: #5B21B6; }
-    .badge-eligibility { background: #FEF3C7; color: #92400E; }
-    .badge-eligibility.individual { background: #D1FAE5; color: #065F46; }
-    .badge-eligibility.nfp { background: #DBEAFE; color: #1E40AF; }
-    .badge-eligibility.partnership { background: #FED7AA; color: #9A3412; }
+    .badge-category { background: var(--otl-pale-pink); color: var(--otl-grape); }
+    .badge-eligibility { background: var(--otl-pale-pink); color: var(--otl-violet); }
+    .badge-eligibility.individual { background: var(--otl-pale-sage); color: #3d5429; }
+    .badge-eligibility.nfp { background: var(--otl-pale-sage); color: var(--otl-blue); }
+    .badge-eligibility.partnership { background: var(--otl-pale-pink); color: #96044f; }
     .badge-proposal { background: var(--otl-gold); color: white; }
 
     .grant-actions {
@@ -280,7 +302,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(44, 44, 44, 0.6);
+      background: rgba(73, 66, 88, 0.6);
       display: none;
       justify-content: center;
       align-items: center;
@@ -367,7 +389,7 @@
     .form-input:focus, .form-select:focus, .form-textarea:focus {
       outline: none;
       border-color: var(--otl-olive);
-      box-shadow: 0 0 0 3px rgba(107, 123, 61, 0.1);
+      box-shadow: 0 0 0 3px rgba(93, 124, 65, 0.18);
     }
 
     .form-textarea { min-height: 120px; resize: vertical; }
@@ -412,7 +434,7 @@
     .doc-add:hover {
       border-color: var(--otl-olive);
       color: var(--otl-forest);
-      background: rgba(107, 123, 61, 0.05);
+      background: rgba(93, 124, 65, 0.07);
     }
 
     /* Grant detail view */
@@ -540,7 +562,7 @@
     .template-card .tip {
       margin-top: 1rem;
       padding: 0.875rem;
-      background: rgba(201, 162, 39, 0.1);
+      background: rgba(208, 6, 112, 0.08);
       border-left: 3px solid var(--otl-gold);
       border-radius: 0 0.5rem 0.5rem 0;
       font-size: 0.85rem;

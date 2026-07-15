@@ -2,8 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
-const ROOT = '/work';
+const PORT = process.env.PORT || 3000;
+const ROOT = __dirname;
 
 const mimeTypes = {
   '.html': 'text/html',
@@ -12,28 +12,29 @@ const mimeTypes = {
   '.json': 'application/json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.gif': 'image/gif',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon'
 };
 
 const server = http.createServer((req, res) => {
-  // Clean up the URL
-  let pathname = req.url;
-  if (pathname === '/') pathname = '/index.html';
-
-  // Prevent directory traversal
-  const safePath = path.normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, '');
-  let filePath = path.join(ROOT, safePath);
-
-  // If requesting a directory, try index.html
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(filePath, 'index.html');
+  // Strip query string and decode, then resolve against ROOT.
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    return res.end('Bad Request');
   }
 
-  // If no extension, try .html
-  if (!path.extname(filePath) && !fs.existsSync(filePath)) {
-    filePath += '.html';
+  if (urlPath === '/') urlPath = '/index.html';
+
+  // Prevent path traversal: resolved path must stay inside ROOT.
+  const filePath = path.join(ROOT, path.normalize(urlPath));
+  if (!filePath.startsWith(ROOT + path.sep) && filePath !== path.join(ROOT, 'index.html')) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
+    return res.end('Forbidden');
   }
 
   const ext = path.extname(filePath).toLowerCase();
@@ -41,23 +42,20 @@ const server = http.createServer((req, res) => {
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
-      if (err.code === 'ENOENT') {
+      if (err.code === 'ENOENT' || err.code === 'EISDIR') {
         res.writeHead(404, { 'Content-Type': 'text/html' });
-        res.end('<h1>404 Not Found</h1><p>' + safePath + '</p>', 'utf-8');
+        res.end('<h1>404 Not Found</h1>', 'utf-8');
       } else {
-        res.writeHead(500);
-        res.end('Server Error: ' + err.code);
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Server Error');
       }
     } else {
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*'
-      });
+      res.writeHead(200, { 'Content-Type': contentType });
       res.end(content, 'utf-8');
     }
   });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${PORT}/`);
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
