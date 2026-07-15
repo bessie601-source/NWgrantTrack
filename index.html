@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>North West NSW Grant Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-forest: #1a472a;
+      --color-earth: #5c4a3d;
+      --color-sand: #c9b896;
+      --color-clay: #a67c52;
+      --color-sky: #87ceeb;
+      --color-urgent: #c45c3e;
+      --color-warning: #d4a84b;
+      --color-success: #4a7c59;
+      --color-muted: #6b7280;
+      --color-bg: #faf9f7;
+      --color-card: #ffffff;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--color-bg);
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--color-forest) 0%, #2d5a3d 100%);
+      color: white;
+      padding: 2rem;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header h1 {
+      font-family: 'Crimson Pro', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+    }
+
+    .stats-bar {
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1rem 2rem;
+    }
+
+    .stats-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-forest);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--color-forest);
+    }
+
+    .tab.active {
+      color: var(--color-forest);
+      border-bottom-color: var(--color-forest);
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--color-forest);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #143620;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+      background: #f9fafb;
+    }
+
+    .btn-filter {
+      background: white;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-filter.active {
+      background: var(--color-forest);
+      color: white;
+      border-color: var(--color-forest);
+    }
+
+    .card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .grant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .grant-item {
+      padding: 1.25rem;
+      border-bottom: 1px solid #f3f4f6;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: start;
+      transition: background 0.2s;
+    }
+
+    .grant-item:hover {
+      background: #faf9f7;
+    }
+
+    .grant-item:last-child {
+      border-bottom: none;
+    }
+
+    .grant-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .grant-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #111827;
+    }
+
+    .grant-funder {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .grant-description {
+      font-size: 0.875rem;
+      color: #4b5563;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .grant-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: #6b7280;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.625rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-urgent {
+      background: #fef3f2;
+      color: var(--color-urgent);
+    }
+
+    .badge-warning {
+      background: #fefbeb;
+      color: var(--color-warning);
+    }
+
+    .badge-soon {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .badge-open {
+      background: #f0fdf4;
+      color: var(--color-success);
+    }
+
+    .badge-closed {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .badge-funded {
+      background: #f0fdf4;
+      color: var(--color-success);
+    }
+
+    .badge-category {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .grant-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .amount {
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: var(--color-forest);
+    }
+
+    .deadline {
+      font-size: 0.875rem;
+      color: var(--color-urgent);
+      font-weight: 500;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--color-muted);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 0.5rem;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--color-muted);
+      padding: 0.25rem;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 0.375rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 0.625rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-forest);
+      box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    /* Calendar view */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: #e5e7eb;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      background: var(--color-forest);
+      color: white;
+      padding: 0.75rem;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .calendar-day {
+      background: white;
+      min-height: 100px;
+      padding: 0.5rem;
+      position: relative;
+    }
+
+    .calendar-day-number {
+      font-size: 0.875rem;
+      color: #374151;
+      margin-bottom: 0.25rem;
+    }
+
+    .calendar-day.other-month {
+      background: #f9fafb;
+      color: #9ca3af;
+    }
+
+    .calendar-event {
+      background: var(--color-forest);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      margin-bottom: 0.25rem;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-event.urgent {
+      background: var(--color-urgent);
+    }
+
+    .calendar-event.warning {
+      background: var(--color-warning);
+      color: #1f2937;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .grant-item {
+        grid-template-columns: 1fr;
+      }
+
+      .grant-actions {
+        align-items: flex-start;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1>North West NSW Grant Tracker</h1>
+      <p>Organize funding opportunities for environmental and community resilience projects</p>
+    </div>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stats-content">
+      <div class="stat">
+        <span class="stat-value" id="stat-open">0</span>
+        <span class="stat-label">Open Opportunities</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-closing">0</span>
+        <span class="stat-label">Closing Soon</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-tracked">0</span>
+        <span class="stat-label">Total Tracked</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-avg">$0</span>
+        <span class="stat-label">Avg. Grant Size</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="opportunities">Opportunities</button>
+      <button class="tab" data-tab="pipeline">My Pipeline</button>
+      <button class="tab" data-tab="calendar">Calendar View</button>
+      <button class="tab" data-tab="templates">Grant Templates</button>
+    </div>
+
+    <div class="actions-bar">
+      <div class="filter-group">
+        <button class="btn btn-filter active" data-filter="all">All</button>
+        <button class="btn btn-filter" data-filter="open">Open</button>
+        <button class="btn btn-filter" data-filter="closing">Closing Soon</button>
+        <button class="btn btn-filter" data-filter="environmental">Environmental</button>
+        <button class="btn btn-filter" data-filter="community">Community</button>
+        <button class="btn btn-filter" data-filter="indigenous">Indigenous</button>
+      </div>
+      <button class="btn btn-primary" id="add-grant-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Add Grant
+      </button>
+    </div>
+
+    <div class="card">
+      <div id="opportunities-view" class="view">
+        <div class="grant-list" id="grant-list">
+          <!-- Grants loaded dynamically -->
+        </div>
+      </div>
+
+      <div id="pipeline-view" class="view" style="display: none;">
+        <div class="grant-list" id="pipeline-list">
+          <!-- Pipeline items loaded dynamically -->
+        </div>
+      </div>
+
+      <div id="calendar-view" class="view" style="display: none;">
+        <div class="calendar-grid" id="calendar-grid">
+          <!-- Calendar loaded dynamically -->
+        </div>
+      </div>
+
+      <div id="templates-view" class="view" style="display: none;">
+        <div class="grant-list" id="templates-list">
+          <!-- Templates loaded dynamically -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Grant Modal -->
+  <div class="modal-overlay" id="grant-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Grant Opportunity</h2>
+        <button class="modal-close" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="grant-form">
+          <div class="form-group">
+            <label class="form-label">Grant Name *</label>
+            <input type="text" class="form-input" name="name" required placeholder="e.g., Community Environment Program">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Funder / Organization *</label>
+            <input type="text" class="form-input" name="funder" required placeholder="e.g., Australian Government">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" name="category">
+                <option value="environmental">Environmental</option>
+                <option value="community">Community</option>
+                <option value="indigenous">Indigenous</option>
+                <option value="landcare">Landcare</option>
+                <option value="drought">Drought Resilience</option>
+                <option value="flood">Flood Recovery</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grant Amount</label>
+              <input type="text" class="form-input" name="amount" placeholder="e.g., $5,000 - $20,000">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Opening Date</label>
+              <input type="date" class="form-input" name="openDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Closing Date *</label>
+              <input type="date" class="form-input" name="closeDate" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status">
+              <option value="open">Open</option>
+              <option value="opening_soon">Opening Soon</option>
+              <option value="closing_soon">Closing Soon</option>
+              <option value="closed">Closed</option>
+              <option value="draft">Draft</option>
+              <option value="submitted">Submitted</option>
+              <option value="funded">Funded</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" name="description" placeholder="What does this grant fund? Eligibility criteria, project types..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Application URL</label>
+            <input type="url" class="form-input" name="url" placeholder="https://...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" name="notes" placeholder="Contacts, requirements, reminders..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save Grant</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initial data with real NSW North West relevant grants
+    const initialGrants = [
+      {
+        id: 1,
+        name: "Community Environment Program",
+        funder: "Australian Government (DCCEEW)",
+        category: "environmental",
+        amount: "$2,000 - $20,000",
+        openDate: "2026-02-01",
+        closeDate: "2026-08-31",
+        status: "open",
+        description: "Supports community-led projects that address local environmental priorities. Eligible for biodiversity, threatened species, and habitat restoration projects.",
+        url: "https://www.dcceew.gov.au",
+        notes: "Annual round. Strong track record with Landcare groups. Need ABN."
+      },
+      {
+        id: 2,
+        name: "Indigenous Protected Areas (IPA) Program",
+        funder: "National Indigenous Australians Agency",
+        category: "indigenous",
+        amount: "$50,000+",
+        openDate: "2026-01-01",
+        closeDate: "2026-10-15",
+        status: "open",
+        description: "Supports Traditional Owners to manage land and sea country. Can include cultural events, knowledge sharing, and joint management activities.",
+        url: "https://www.niaa.gov.au",
+        notes: "Contact local Aboriginal Land Council first. Long application process."
+      },
+      {
+        id: 3,
+        name: "Stronger Communities Programme",
+        funder: "Australian Government",
+        category: "community",
+        amount: "$2,500 - $20,000",
+        openDate: "2026-05-01",
+        closeDate: "2026-09-30",
+        status: "closing_soon",
+        description: "Funds capital projects that improve community participation and social cohesion. Can include community event spaces and gathering places.",
+        url: "https://www.infrastructure.gov.au",
+        notes: "Need local MP endorsement. High competition."
+      },
+      {
+        id: 4,
+        name: "NSW Environmental Trust - Community Grants",
+        funder: "NSW Environment Protection Authority",
+        category: "environmental",
+        amount: "$5,000 - $100,000",
+        openDate: "2026-03-15",
+        closeDate: "2026-06-30",
+        status: "closed",
+        description: "Supports restoration and rehabilitation of environmental degradation. Priority for threatened species and Aboriginal cultural heritage.",
+        url: "https://www.epa.nsw.gov.au",
+        notes: "Next round usually March. Good for wildlife education events."
+      },
+      {
+        id: 5,
+        name: "Future Drought Fund - Networks & Training",
+        funder: "Department of Agriculture",
+        category: "drought",
+        amount: "$10,000 - $100,000",
+        openDate: "2026-07-01",
+        closeDate: "2026-11-30",
+        status: "opening_soon",
+        description: "Builds community drought resilience through networks, training, and events. Perfect for knowledge-sharing events between farmers and Traditional Owners.",
+        url: "https://www.agriculture.gov.au",
+        notes: "Aligns perfectly with your nursery/Landcare background."
+      },
+      {
+        id: 6,
+        name: "Local Land Services - Community Action Grants",
+        funder: "North West Local Land Services",
+        category: "landcare",
+        amount: "$1,000 - $10,000",
+        openDate: "2026-04-01",
+        closeDate: "2026-07-31",
+        status: "open",
+        description: "Supports local community groups with on-ground works and events. Can include workshops, field days, and knowledge-sharing events.",
+        url: "https://www.lls.nsw.gov.au/regions/north-west",
+        notes: "Your existing relationship with them is huge advantage. Contact coordinator directly."
+      },
+      {
+        id: 7,
+        name: "Foundation for Rural & Regional Renewal",
+        funder: "FRRR (Various donors)",
+        category: "community",
+        amount: "$5,000 - $25,000",
+        openDate: "2026-02-15",
+        closeDate: "2026-08-24",
+        status: "open",
+        description: "Multiple grant rounds supporting rural community resilience. Strong focus on social cohesion and mental health through community connection.",
+        url: "https://frrr.org.au",
+        notes: "Multiple rounds per year. Sign up for newsletter for alerts."
+      },
+      {
+        id: 8,
+        name: "Bushfire Community Recovery & Resilience",
+        funder: "Australian Red Cross",
+        category: "community",
+        amount: "$2,500 - $10,000",
+        openDate: "2026-06-01",
+        closeDate: "2026-09-15",
+        status: "closing_soon",
+        description: "Supports community recovery and preparedness. Can include cultural healing events, community preparedness workshops, and resilience building.",
+        url: "https://www.redcross.org.au",
+        notes: "Prioritizes fire-affected regions. Consider connection between drought/flood/fire resilience."
+      }
+    ];
+
+    // Templates for grant applications
+    const grantTemplates = [
+      {
+        id: "landcare-event",
+        name: "Landcare Community Event Proposal",
+        category: "landcare",
+        sections: [
+          "Project Summary (50 words)",
+          "Community Need (How does this build resilience?)",
+          "Target Audience (Who will attend?)",
+          "Activities & Timeline",
+          "Budget Breakdown",
+          "Environmental Outcomes",
+          "Community Partnerships (Include Aboriginal orgs)",
+          "Risk Management",
+          "Evaluation Plan"
+        ],
+        tips: "Reference your 2023 Sydney Region Landcare award. Emphasize knowledge-sharing between farmers and Traditional Owners."
+      },
+      {
+        id: "drought-resilience",
+        name: "Drought Resilience Event Application",
+        category: "drought",
+        sections: [
+          "Project Overview",
+          "Drought Resilience Need in Your Region",
+          "Knowledge-Sharing Components",
+          "Participants & Engagement Strategy",
+          "Traditional Owner Involvement",
+          "Follow-up & Legacy Activities",
+          "Budget & Funding Request",
+          "Monitoring & Evaluation"
+        ],
+        tips: "Future Drought Fund prioritizes 'networks that persist beyond the project'. Show how this builds ongoing relationships."
+      },
+      {
+        id: "cultural-knowledge",
+        name: "Indigenous Cultural Knowledge Sharing",
+        category: "indigenous",
+        sections: [
+          "Project Description",
+          "Cultural Authority (Who are the Traditional Owners?)",
+          "Knowledge-Sharing Approach",
+          "Benefits to Indigenous Community",
+          "Benefits to Wider Community",
+          "Healing & Reconciliation Outcomes",
+          "Location & Cultural Protocols",
+          "Budget",
+          "Letter of Support from Aboriginal Org"
+        ],
+        tips: "Always get written support from local Aboriginal Land Council or Registered Native Title Body Corporate before applying."
+      },
+      {
+        id: "native-plant",
+        name: "Native Plant Education & Propagation",
+        category: "environmental",
+        sections: [
+          "Project Summary",
+          "Threatened Species Focus",
+          "Educational Outcomes",
+          "Practical Activities",
+          "Seed Collection & Propagation",
+          "Community Participation",
+          "Environmental Benefits",
+          "Budget"
+        ],
+        tips: "Reference your nursery management experience. Include photos of past successful propagation."
+      }
+    ];
+
+    // State
+    let grants = JSON.parse(localStorage.getItem('grants')) || initialGrants;
+    let currentFilter = 'all';
+    let currentTab = 'opportunities';
+    let editingId = null;
+
+    // DOM elements
+    const grantList = document.getElementById('grant-list');
+    const pipelineList = document.getElementById('pipeline-list');
+    const templatesList = document.getElementById('templates-list');
+    const calendarGrid = document.getElementById('calendar-grid');
+    const modal = document.getElementById('grant-modal');
+    const grantForm = document.getElementById('grant-form');
+
+    // Initialize
+    function init() {
+      updateStats();
+      renderGrants();
+      renderPipeline();
+      renderTemplates();
+      renderCalendar();
+      setupEventListeners();
+    }
+
+    // Update statistics
+    function updateStats() {
+      const open = grants.filter(g => g.status === 'open' || g.status === 'opening_soon').length;
+      const closing = grants.filter(g => {
+        if (g.status !== 'open' && g.status !== 'closing_soon') return false;
+        const days = getDaysUntil(g.closeDate);
+        return days <= 30 && days >= 0;
+      }).length;
+      const total = grants.length;
+
+      const amounts = grants.map(g => {
+        const match = g.amount.match(/[\d,]+/g);
+        if (match) {
+          const nums = match.map(n => parseInt(n.replace(/,/g, '')));
+          return nums[nums.length - 1]; // Take the upper bound or single value
+        }
+        return 0;
+      }).filter(a => a > 0);
+
+      const avg = amounts.length ? Math.round(amounts.reduce((a,b) => a+b, 0) / amounts.length) : 0;
+
+      document.getElementById('stat-open').textContent = open;
+      document.getElementById('stat-closing').textContent = closing;
+      document.getElementById('stat-tracked').textContent = total;
+      document.getElementById('stat-avg').textContent = '$' + avg.toLocaleString();
+    }
+
+    // Get days until date
+    function getDaysUntil(dateStr) {
+      const target = new Date(dateStr);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const diff = target - today;
+      return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+
+    // Get status badge
+    function getStatusBadge(grant) {
+      const days = getDaysUntil(grant.closeDate);
+
+      if (grant.status === 'funded') return '<span class="badge badge-funded">Funded</span>';
+      if (grant.status === 'rejected') return '<span class="badge badge-closed">Not Successful</span>';
+      if (grant.status === 'submitted') return '<span class="badge badge-soon">Submitted</span>';
+      if (grant.status === 'draft') return '<span class="badge badge-warning">Draft</span>';
+      if (grant.status === 'closed') return '<span class="badge badge-closed">Closed</span>';
+
+      if (days < 0) return '<span class="badge badge-closed">Closed</span>';
+      if (days <= 7) return '<span class="badge badge-urgent">Closes in ' + days + ' days</span>';
+      if (days <= 30) return '<span class="badge badge-warning">Closes in ' + days + ' days</span>';
+      if (days <= 60) return '<span class="badge badge-soon">Closes in ' + days + ' days</span>';
+      return '<span class="badge badge-open">Open</span>';
+    }
+
+    // Get category badge
+    function getCategoryBadge(category) {
+      const labels = {
+        environmental: 'Environmental',
+        community: 'Community',
+        indigenous: 'Indigenous',
+        landcare: 'Landcare',
+        drought: 'Drought',
+        flood: 'Flood',
+        other: 'Other'
+      };
+      return '<span class="badge badge-category">' + (labels[category] || category) + '</span>';
+    }
+
+    // Render grants list
+    function renderGrants() {
+      let filtered = grants;
+
+      if (currentFilter === 'open') {
+        filtered = grants.filter(g => g.status === 'open' || g.status === 'opening_soon');
+      } else if (currentFilter === 'closing') {
+        filtered = grants.filter(g => {
+          const days = getDaysUntil(g.closeDate);
+          return (g.status === 'open' || g.status === 'closing_soon') && days <= 30 && days >= 0;
+        });
+      } else if (currentFilter !== 'all') {
+        filtered = grants.filter(g => g.category === currentFilter);
+      }
+
+      // Sort by deadline
+      filtered.sort((a, b) => new Date(a.closeDate) - new Date(b.closeDate));
+
+      if (filtered.length === 0) {
+        grantList.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 14l6-6m0 6l-6-6"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+            <p>No grants match your filter</p>
+          </div>
+        `;
+        return;
+      }
+
+      grantList.innerHTML = filtered.map(grant => `
+        <div class="grant-item" data-id="${grant.id}">
+          <div class="grant-info">
+            <div class="grant-header">
+              <span class="grant-title">${grant.name}</span>
+              ${getStatusBadge(grant)}
+              ${getCategoryBadge(grant.category)}
+            </div>
+            <span class="grant-funder">${grant.funder}</span>
+            <p class="grant-description">${grant.description}</p>
+            <div class="grant-meta">
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Closes ${new Date(grant.closeDate).toLocaleDateString('en-AU')}
+              </span>
+              ${grant.url ? `
+              <span class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                <a href="${grant.url}" target="_blank">Apply Online</a>
+              </span>` : ''}
+            </div>
+            ${grant.notes ? `<div class="grant-meta"><span class="meta-item" style="color: var(--color-earth);">Note: ${grant.notes}</span></div>` : ''}
+          </div>
+          <div class="grant-actions">
+            <span class="amount">${grant.amount}</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="addToPipeline(${grant.id})">Track</button>
+              <button class="btn btn-secondary" onclick="editGrant(${grant.id})">Edit</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render pipeline (grants being tracked)
+    function renderPipeline() {
+      const pipelineGrants = grants.filter(g => ['draft', 'submitted', 'funded', 'rejected'].includes(g.status));
+
+      if (pipelineGrants.length === 0) {
+        pipelineList.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <p>No grants in your pipeline yet</p>
+            <p style="font-size: 0.875rem; margin-top: 0.5rem;">Click "Track" on any grant to add it here</p>
+          </div>
+        `;
+        return;
+      }
+
+      pipelineList.innerHTML = pipelineGrants.map(grant => `
+        <div class="grant-item" data-id="${grant.id}">
+          <div class="grant-info">
+            <div class="grant-header">
+              <span class="grant-title">${grant.name}</span>
+              ${getStatusBadge(grant)}
+              ${getCategoryBadge(grant.category)}
+            </div>
+            <span class="grant-funder">${grant.funder}</span>
+            <p class="grant-description">${grant.description}</p>
+            <div class="grant-meta">
+              <span class="meta-item">${grant.amount}</span>
+              <span class="meta-item">Submitted: ${grant.submittedDate || 'Not yet'}</span>
+            </div>
+          </div>
+          <div class="grant-actions">
+            <select class="form-select" onchange="updateStatus(${grant.id}, this.value)" style="width: auto; min-width: 120px;">
+              <option value="draft" ${grant.status === 'draft' ? 'selected' : ''}>Draft</option>
+              <option value="submitted" ${grant.status === 'submitted' ? 'selected' : ''}>Submitted</option>
+              <option value="funded" ${grant.status === 'funded' ? 'selected' : ''}>Funded</option>
+              <option value="rejected" ${grant.status === 'rejected' ? 'selected' : ''}>Not Funded</option>
+            </select>
+            <button class="btn btn-secondary" onclick="editGrant(${grant.id})">Edit</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render templates
+    function renderTemplates() {
+      templatesList.innerHTML = grantTemplates.map(template => `
+        <div class="grant-item">
+          <div class="grant-info">
+            <div class="grant-header">
+              <span class="grant-title">${template.name}</span>
+              ${getCategoryBadge(template.category)}
+            </div>
+            <div style="margin-top: 0.75rem;">
+              <p style="font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Application Sections:</p>
+              <ol style="font-size: 0.875rem; color: #4b5563; padding-left: 1.25rem; line-height: 1.8;">
+                ${template.sections.map(s => `<li>${s}</li>`).join('')}
+              </ol>
+            </div>
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: #f0fdf4; border-radius: 0.375rem; border-left: 3px solid var(--color-success);">
+              <p style="font-size: 0.875rem; color: #166534; margin: 0;"><strong>Tip:</strong> ${template.tips}</p>
+            </div>
+          </div>
+          <div class="grant-actions">
+            <button class="btn btn-secondary" onclick="copyTemplate('${template.id}')">Copy to Clipboard</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render calendar
+    function renderCalendar() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      let html = dayNames.map(d => `<div class="calendar-header">${d}</div>`).join('');
+
+      // Previous month
+      for (let i = firstDay - 1; i >= 0; i--) {
+        html += `<div class="calendar-day other-month"><div class="calendar-day-number">${daysInPrevMonth - i}</div></div>`;
+      }
+
+      // Current month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayGrants = grants.filter(g => {
+          const close = new Date(g.closeDate);
+          return close.getDate() === day && close.getMonth() === month && close.getFullYear() === year;
+        });
+
+        const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+        html += `<div class="calendar-day" style="${isToday ? 'background: #eff6ff;' : ''}">
+          <div class="calendar-day-number" style="${isToday ? 'color: #1d4ed8; font-weight: 700;' : ''}">${day}</div>
+          ${dayGrants.map(g => {
+            const daysLeft = getDaysUntil(g.closeDate);
+            let eventClass = 'calendar-event';
+            if (daysLeft <= 7) eventClass += ' urgent';
+            else if (daysLeft <= 30) eventClass += ' warning';
+            return `<div class="${eventClass}" title="${g.name}">${g.name}</div>`;
+          }).join('')}
+        </div>`;
+      }
+
+      // Next month
+      const remainingCells = (7 - ((firstDay + daysInMonth) % 7)) % 7;
+      for (let day = 1; day <= remainingCells; day++) {
+        html += `<div class="calendar-day other-month"><div class="calendar-day-number">${day}</div></div>`;
+      }
+
+      calendarGrid.innerHTML = html;
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentTab = tab.dataset.tab;
+
+          document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+          document.getElementById(currentTab + '-view').style.display = 'block';
+        });
+      });
+
+      // Filters
+      document.querySelectorAll('.btn-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          renderGrants();
+        });
+      });
+
+      // Modal
+      document.getElementById('add-grant-btn').addEventListener('click', openModal);
+      document.getElementById('close-modal').addEventListener('click', closeModal);
+      document.getElementById('cancel-btn').addEventListener('click', closeModal);
+      document.getElementById('save-btn').addEventListener('click', saveGrant);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    // Modal functions
+    function openModal() {
+      editingId = null;
+      grantForm.reset();
+      document.querySelector('.modal-title').textContent = 'Add Grant Opportunity';
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      editingId = null;
+    }
+
+    // Edit grant
+    window.editGrant = function(id) {
+      const grant = grants.find(g => g.id === id);
+      if (!grant) return;
+
+      editingId = id;
+      document.querySelector('.modal-title').textContent = 'Edit Grant';
+
+      grantForm.name.value = grant.name;
+      grantForm.funder.value = grant.funder;
+      grantForm.category.value = grant.category;
+      grantForm.amount.value = grant.amount;
+      grantForm.openDate.value = grant.openDate;
+      grantForm.closeDate.value = grant.closeDate;
+      grantForm.status.value = grant.status;
+      grantForm.description.value = grant.description || '';
+      grantForm.url.value = grant.url || '';
+      grantForm.notes.value = grant.notes || '';
+
+      modal.classList.add('active');
+    };
+
+    // Save grant
+    function saveGrant() {
+      const formData = new FormData(grantForm);
+      const grant = {
+        id: editingId || Date.now(),
+        name: formData.get('name'),
+        funder: formData.get('funder'),
+        category: formData.get('category'),
+        amount: formData.get('amount') || 'TBA',
+        openDate: formData.get('openDate') || new Date().toISOString().split('T')[0],
+        closeDate: formData.get('closeDate'),
+        status: formData.get('status'),
+        description: formData.get('description'),
+        url: formData.get('url'),
+        notes: formData.get('notes')
+      };
+
+      if (!grant.name || !grant.funder || !grant.closeDate) {
+        alert('Please fill in required fields (Grant Name, Funder, Closing Date)');
+        return;
+      }
+
+      if (editingId) {
+        const index = grants.findIndex(g => g.id === editingId);
+        if (index !== -1) grants[index] = grant;
+      } else {
+        grants.push(grant);
+      }
+
+      localStorage.setItem('grants', JSON.stringify(grants));
+      updateStats();
+      renderGrants();
+      renderPipeline();
+      renderCalendar();
+      closeModal();
+    }
+
+    // Add to pipeline
+    window.addToPipeline = function(id) {
+      const grant = grants.find(g => g.id === id);
+      if (grant) {
+        grant.status = 'draft';
+        localStorage.setItem('grants', JSON.stringify(grants));
+        updateStats();
+        renderGrants();
+        renderPipeline();
+      }
+    };
+
+    // Update status
+    window.updateStatus = function(id, status) {
+      const grant = grants.find(g => g.id === id);
+      if (grant) {
+        grant.status = status;
+        if (status === 'submitted') {
+          grant.submittedDate = new Date().toISOString().split('T')[0];
+        }
+        localStorage.setItem('grants', JSON.stringify(grants));
+        updateStats();
+        renderGrants();
+        renderPipeline();
+      }
+    };
+
+    // Copy template
+    window.copyTemplate = function(id) {
+      const template = grantTemplates.find(t => t.id === id);
+      if (template) {
+        const text = template.name + '\n\n' + template.sections.map((s, i) => `${i+1}. ${s}`).join('\n') + '\n\nTips: ' + template.tips;
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Template copied to clipboard!');
+        });
+      }
+    };
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
