@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#3b2a5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="OTL Ledger">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<title>One Tree Locale Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#3b2a5e;--grape:#543772;--violet:#79447f;--sage:#5d7c41;--sage-dk:#3d5429;--green:#9cb86c;
+  --pale-sage:#d0ddb9;--pale-pink:#f2dee9;--pink:#c779a1;--fuchsia:#d00670;--fuchsia-dk:#96044f;--sky:#6569a0;--grey:#494258;
+  --bg:var(--pale-pink);--card:#fff;--ink:var(--grey);--muted:var(--violet);--line:var(--pale-sage);
+  --head:var(--purple);--accent:var(--sage);--accent-ink:var(--sage-dk);--accent-soft:#e8efdc;
+  --warn:var(--fuchsia);--warn-ink:var(--fuchsia-dk);--warn-soft:#fbe3ef;--credit-soft:var(--pale-pink);--credit-ink:var(--grape);
+  --btn:var(--purple);--btn-hover:var(--sage);--field:#fbf6f9;
+  --shadow:0 1px 3px rgba(59,42,94,.08),0 4px 14px rgba(59,42,94,.05);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#1e1927;--card:#2a2336;--ink:#f2dee9;--muted:#c79fc6;--line:#3f3552;
+  --head:#e7d3f0;--accent:#9cb86c;--accent-ink:#b9d18f;--accent-soft:#2c3a22;
+  --warn:#ef5aa3;--warn-ink:#f58cbf;--warn-soft:#45192f;--credit-soft:#3a2b48;--credit-ink:#e0bfe0;
+  --btn:#79447f;--btn-hover:#5d7c41;--field:#231d2e;--shadow:none;color-scheme:dark;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'Inter',-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,.stat .val{font-family:'Playfair Display',Georgia,serif}
+.banner{background:linear-gradient(135deg,var(--purple) 0%,var(--sage) 100%);color:#fff;position:relative}
+.banner::after{content:'';position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--fuchsia),var(--pale-sage),var(--fuchsia))}
+.banner-in{max-width:980px;margin:auto;padding:calc(22px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 24px calc(16px + env(safe-area-inset-left))}
+h1{font-size:28px;font-weight:700;margin:0;letter-spacing:-.02em}
+.banner p{margin:2px 0 0;color:var(--pale-sage);font-size:14px}
+.navbar{background:var(--card);border-bottom:2px solid var(--line)}
+nav{max-width:980px;margin:auto;display:flex;gap:2px;overflow-x:auto;padding:0 10px}
+nav button{flex:none;font:inherit;font-size:14px;font-weight:500;padding:13px 12px 11px;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;background:none;color:var(--muted);cursor:pointer}
+nav button:hover{color:var(--head)}
+nav button.on{color:var(--head);border-bottom-color:var(--fuchsia);font-weight:600}
+main{max-width:980px;margin:auto;padding:18px calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+html{-webkit-text-size-adjust:100%}
+body{overscroll-behavior-y:none}
+h2{font-size:18px;font-weight:600;margin:0 0 12px;color:var(--head)}
+h2 .muted{font-family:'Inter',sans-serif;font-size:14px;font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat .val{font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px;color:var(--head)}
+.stat .sub{font-size:12px;color:var(--muted)}
+.stat.good .val{color:var(--accent-ink)} .stat.bad .val{color:var(--warn)}
+.muted{color:var(--muted)}
+form.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+label{font-size:12px;font-weight:500;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input,select{font:inherit;font-size:15px;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);width:100%}
+input[type=date]{cursor:pointer;min-height:42px}
+input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.85;padding:2px}
+input:focus,select:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(121,68,127,.15)}
+.btn{font:inherit;font-size:14px;font-weight:600;padding:10px 16px;border-radius:8px;border:none;background:var(--btn);color:#fff;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--btn-hover)}
+.btn.ghost{background:var(--card);color:var(--grape);border:1.5px solid var(--line)}
+.btn.ghost:hover{background:var(--bg);border-color:var(--sage)}
+.btn.danger{background:var(--fuchsia)} .btn.danger:hover{background:var(--fuchsia-dk)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
+.pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.pill.warn{background:var(--credit-soft);color:var(--credit-ink)}
+.pill.bad{background:var(--warn-soft);color:var(--warn-ink)}
+.x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
+.x:hover{color:var(--warn)}
+.link{background:none;border:none;padding:0;font:inherit;color:var(--grape);font-weight:500;cursor:pointer;text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:3px}
+@media (prefers-color-scheme:dark){.link{color:var(--credit-ink)}.btn.ghost{color:var(--credit-ink)}}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--sage),var(--green))}
+.periods{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.periods button{font:inherit;font-size:13px;font-weight:500;padding:6px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--grape);cursor:pointer}
+@media (prefers-color-scheme:dark){.periods button{color:var(--ink)}}
+.periods button.on{background:var(--btn);border-color:var(--btn);color:#fff}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--purple);color:#fff;padding:9px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+*{-webkit-tap-highlight-color:transparent}
+@media (max-width:600px){
+  .grid{grid-template-columns:1fr 1fr}
+  .grid .stat:last-child:nth-child(odd){grid-column:1/-1}
+  .tablewrap table,.tablewrap tbody,.tablewrap tfoot,.tablewrap tr,.tablewrap td{display:block;width:100%}
+  .tablewrap thead{display:none}
+  .tablewrap tbody tr{position:relative;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-bottom:8px;background:var(--card)}
+  .tablewrap td{display:flex;justify-content:space-between;gap:12px;align-items:center;border:none;padding:4px 0;white-space:normal;text-align:right}
+  .tablewrap td::before{content:attr(data-label);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;flex:none}
+  .tablewrap td.blank,.tablewrap td[data-label=""]:not(:has(.x)){display:none}
+  .tablewrap td:has(.x){position:absolute;top:2px;right:4px;width:auto;padding:0}
+  .tablewrap td:has(.x)::before{content:none}
+  .tablewrap tbody td:first-child{padding-right:28px}
+  .tablewrap tfoot tr{display:flex;justify-content:space-between;padding:6px 10px}
+  .tablewrap tfoot td{display:inline;width:auto;padding:0}
+  .tablewrap tfoot td::before{content:none}
+  .tablewrap tfoot td.blank{display:none}
+  .tablewrap .bar{flex:1;max-width:160px}
+}
+
+.bad-field{border-color:var(--fuchsia)!important;box-shadow:0 0 0 3px rgba(208,6,112,.15)!important}
+.modal{position:fixed;inset:0;background:rgba(73,66,88,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal-box{background:var(--card);color:var(--ink);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal-box p{margin:0 0 16px}
+.modal-box .actions{justify-content:flex-end}
+.storage-warn{background:var(--warn-soft);border-color:var(--pink);color:var(--warn-ink)}
+#toast{z-index:10;bottom:calc(20px + env(safe-area-inset-bottom));max-width:calc(100% - 32px);text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="banner"><div class="banner-in">
+    <h1>One Tree Locale</h1>
+    <p>Sales, purchases, customer credit &amp; loans</p>
+  </div></div>
+  <div class="navbar"><nav>
+    <button data-tab="dash">Dashboard</button>
+    <button data-tab="sales">Sales</button>
+    <button data-tab="purchases">Purchases</button>
+    <button data-tab="contacts">Contacts</button>
+    <button data-tab="customers">Customer credit</button>
+    <button data-tab="loans">Business loans</button>
+    <button data-tab="backup">Backup</button>
+  </nav></div>
+</header>
+<main></main>
+<div id="toast"></div>
+<script>
+const KEY='shop-ledger-v1';
+const blank=()=>({sales:[],purchases:[],customers:[],custPayments:[],loans:[],loanPayments:[]});
+let storageOK=true;
+let S=load(), tab='dash', period='month', openCust=null, contactSearch='';
+
+function load(){try{localStorage.setItem(KEY+'-test','1');localStorage.removeItem(KEY+'-test');const r=localStorage.getItem(KEY);if(r)return Object.assign(blank(),JSON.parse(r));}catch(e){storageOK=false;}return blank();}
+function save(){if(!storageOK)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){storageOK=false;toast('Could not save. Export a backup now.');}}
+
+const $=s=>document.querySelector(s);
+function ask(m,okLabel='Yes, go ahead'){return new Promise(res=>{
+  const o=document.createElement('div');o.className='modal';
+  o.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true"><p></p><div class="actions"><button type="button" class="btn ghost" data-a="0">Cancel</button><button type="button" class="btn" data-a="1"></button></div></div>`;
+  o.querySelector('p').textContent=m;o.querySelector('[data-a="1"]').textContent=okLabel;
+  const done=v=>{o.remove();document.removeEventListener('keydown',key,true);res(v);};
+  const key=e=>{if(e.key==='Escape'){e.stopPropagation();done(false);}};
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)done(b.dataset.a==='1');else if(e.target===o)done(false);});
+  document.addEventListener('keydown',key,true);document.body.appendChild(o);o.querySelector('[data-a="1"]').focus();
+});}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>(n<-0.004?'-':'')+'$'+Math.abs(n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sum=(a,k)=>a.reduce((t,x)=>t+(+x[k]||0),0);
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10);};
+const fmtDate=d=>d?d.split('-').reverse().join('/'):'';
+const byDateDesc=(a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id>a.id?1:-1);
+const custName=id=>{if(!id)return 'Walk-in';const c=S.customers.find(c=>c.id===id);return c?c.name:'(deleted contact)';};
+const supplierName=x=>{if(x.supplierId){const c=S.customers.find(c=>c.id===x.supplierId);if(c)return c.name;}return x.supplier||'';};
+const custBal=id=>sum(S.sales.filter(x=>x.customerId===id&&x.pay==='credit'),'amount')-sum(S.custPayments.filter(x=>x.customerId===id),'amount');
+const loanPaid=l=>S.loanPayments.filter(p=>p.loanId===l.id);
+const loanBal=l=>(+l.principal||0)-sum(loanPaid(l),'amount');
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);}
+
+function periodRange(){
+  const d=new Date(),y=d.getFullYear(),m=d.getMonth();
+  const p=n=>String(n).padStart(2,'0');
+  if(period==='month')return[`${y}-${p(m+1)}-01`,`${y}-${p(m+1)}-31`];
+  if(period==='last'){const ly=m?y:y-1,lm=m?m:12;return[`${ly}-${p(lm)}-01`,`${ly}-${p(lm)}-31`];}
+  if(period==='fy'){const s=m>=6?y:y-1;return[`${s}-07-01`,`${s+1}-06-30`];}
+  return['0000-00-00','9999-12-31'];
+}
+
+function table(heads,rows,numCols=[],foot){
+  const cell=(v,i,tag='td')=>`<${tag} class="${numCols.includes(i)?'num':''}${(v===''||v==null)?' blank':''}"${tag==='td'?` data-label="${String(heads[i]||'').replace(/"/g,'')}"`:''}>${v??''}</${tag}>`;
+  return `<div class="tablewrap"><table><thead><tr>${heads.map((h,i)=>cell(h,i,'th')).join('')}</tr></thead>
+  <tbody>${rows.map(r=>`<tr>${r.map((v,i)=>cell(v,i)).join('')}</tr>`).join('')}</tbody>
+  ${foot?`<tfoot><tr>${foot.map((v,i)=>cell(v,i)).join('')}</tr></tfoot>`:''}</table></div>`;
+}
+const empty=m=>`<div class="empty">${m}</div>`;
+const del=(coll,id)=>`<button class="x" title="Delete" data-act="del" data-coll="${coll}" data-id="${id}">×</button>`;
+const contactOptions=(placeholder,disabledPh=false)=>`<option value=""${disabledPh?' disabled selected':''}>${placeholder}</option>`+
+  [...S.customers].sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')+
+  '<option value="__new">+ Add new contact…</option>';
+const stat=(label,val,sub='',cls='')=>`<div class="stat ${cls}"><div class="label">${label}</div><div class="val">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+
+/* ---------- Views ---------- */
+function vDash(){
+  const [a,b]=periodRange(),inP=x=>x.date>=a&&x.date<=b;
+  const sales=S.sales.filter(inP),sTot=sum(sales,'amount'),sCredit=sum(sales.filter(x=>x.pay==='credit'),'amount');
+  const pur=sum(S.purchases.filter(inP),'amount');
+  const lpTot=sum(S.loanPayments.filter(inP),'amount');
+  const custIn=sum(S.custPayments.filter(inP),'amount');
+  const income=(sTot-sCredit)+custIn;
+  const profit=income-pur,margin=income?Math.round(profit/income*100):0;
+  const cashIn=income,cashOut=pur+lpTot;
+  const owed=S.customers.reduce((t,c)=>t+Math.max(0,custBal(c.id)),0);
+  const debt=S.loans.reduce((t,l)=>t+Math.max(0,loanBal(l)),0);
+  const debtors=S.customers.map(c=>({...c,bal:custBal(c.id)})).filter(c=>c.bal>0.004).sort((x,y)=>y.bal-x.bal);
+  const over=debtors.filter(c=>+c.limit>0&&c.bal>+c.limit);
+  const P=[['month','This month'],['last','Last month'],['fy','This financial year'],['all','All time']];
+  return `<div class="periods">${P.map(([k,l])=>`<button data-act="period" data-p="${k}" class="${period===k?'on':''}">${l}</button>`).join('')}</div>
+  <div class="grid">
+    ${stat('Income received',money(income),'Paid sales + credit repayments')}
+    ${stat('Purchases',money(pur))}
+    ${stat('Profit',money(profit),income?`${margin}% margin`:'',profit>=0?'good':'bad')}
+  </div>
+  <div class="grid">
+    ${stat('Sales put on credit',money(sCredit),'Counted when the customer pays')}
+    ${stat('Loan repayments',money(lpTot))}
+    ${stat('Net cash',money(cashIn-cashOut),'Income − purchases − loan repayments',cashIn-cashOut>=0?'good':'bad')}
+  </div>
+  <div class="grid">
+    ${stat('Customers owe you',money(owed),`${debtors.length} account${debtors.length===1?'':'s'} with a balance`)}
+    ${stat('Loan balance left',money(debt),`${S.loans.length} loan${S.loans.length===1?'':'s'}`)}
+  </div>
+  ${over.length?`<div class="card"><h2>Over credit limit</h2>${table(['Customer','Limit','Owes'],over.map(c=>[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,money(+c.limit),`<span class="pill bad">${money(c.bal)}</span>`]),[1,2])}</div>`:''}
+  <div class="card"><h2>Who owes the most</h2>${debtors.length?table(['Customer','Owes','Limit'],debtors.slice(0,8).map(c=>[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,money(c.bal),+c.limit?money(+c.limit):'—']),[1,2]):empty('No one owes you anything right now.')}</div>
+  <p class="note">Income is counted when money is received: sales paid on the spot, plus repayments from credit customers. A credit sale isn’t income until the customer pays it off. Profit = income received − purchases. Loan repayments reduce what you owe and show in net cash, but aren’t counted as an expense.</p>`;
+}
+
+function vSales(){
+  const rows=[...S.sales].sort(byDateDesc);
+  return `<div class="card"><h2>Record a sale</h2>
+  <form class="row" data-form="sale">
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Customer<select name="customerId" data-contact>${contactOptions('Walk-in / no contact')}</select></label>
+    <label>Description<input name="desc" placeholder="What was sold"></label>
+    <label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <label>Payment<select name="pay"><option value="cash">Paid now</option><option value="credit">On credit (their account)</option></select></label>
+    <button type="button" class="btn" data-submit>Add sale</button>
+  </form></div>
+  <div class="card"><h2>All sales <span class="muted">· ${rows.length}</span></h2>
+  ${rows.length?table(['Date','Customer','Description','Payment','Amount',''],rows.map(x=>[fmtDate(x.date),esc(custName(x.customerId)),esc(x.desc),x.pay==='credit'?'<span class="pill warn">Credit</span>':'<span class="pill">Paid</span>',money(x.amount),del('sales',x.id)]),[4],['','','','Total',money(sum(rows,'amount')),'']):empty('No sales yet.')}</div>`;
+}
+
+function vPurchases(){
+  const rows=[...S.purchases].sort(byDateDesc);
+  const cats=['Stock','Supplies','Rent','Wages','Utilities','Fuel & transport','Equipment','Other'];
+  return `<div class="card"><h2>Record a purchase or expense</h2>
+  <form class="row" data-form="purchase">
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Paid to<select name="supplierId" data-contact>${contactOptions('— Not listed —')}</select></label>
+    <label>Description<input name="desc" placeholder="What you bought"></label>
+    <label>Category<select name="cat">${cats.map(c=>`<option>${c}</option>`).join('')}</select></label>
+    <label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <button type="button" class="btn" data-submit>Add purchase</button>
+  </form></div>
+  <div class="card"><h2>All purchases <span class="muted">· ${rows.length}</span></h2>
+  ${rows.length?table(['Date','Paid to','Description','Category','Amount',''],rows.map(x=>[fmtDate(x.date),esc(supplierName(x)),esc(x.desc),esc(x.cat),money(x.amount),del('purchases',x.id)]),[4],['','','','Total',money(sum(rows,'amount')),'']):empty('No purchases yet.')}</div>`;
+}
+
+const hasCredit=c=>+c.limit>0||S.sales.some(x=>x.customerId===c.id&&x.pay==='credit')||S.custPayments.some(x=>x.customerId===c.id);
+function vCustomers(){
+  if(openCust&&S.customers.find(c=>c.id===openCust))return vCustomer(openCust);
+  const list=S.customers.filter(hasCredit).map(c=>({...c,bal:custBal(c.id)})).sort((a,b)=>b.bal-a.bal||a.name.localeCompare(b.name));
+  return `<div class="card"><h2>Take a repayment</h2>
+  ${S.customers.length?`<form class="row" data-form="custpay">
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Customer<select name="customerId" required data-contact>${contactOptions('Choose customer',true)}</select></label>
+    <label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <label>Note<input name="note" placeholder="Optional"></label>
+    <button type="button" class="btn" data-submit>Record repayment</button>
+  </form>`:empty('Add your customers on the Contacts tab first.')}</div>
+  <div class="card"><h2>Credit accounts <span class="muted">· ${list.length}</span></h2>
+  ${list.length?table(['Customer','Phone','Limit','Owes','Available'],list.map(c=>{
+    const lim=+c.limit||0,overL=lim&&c.bal>lim;
+    return[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,esc(c.phone),lim?money(lim):'—',
+      c.bal>0.004?`<span class="pill ${overL?'bad':'warn'}">${money(c.bal)}</span>`:money(c.bal),lim?money(lim-c.bal):'—'];
+  }),[2,3,4],['Total','','',money(list.reduce((t,c)=>t+Math.max(0,c.bal),0)),'']):empty('No one has bought on credit yet.')}
+  <p class="note">Anyone on your contact list can buy on credit — choose “On credit” when recording their sale. To set a credit limit, open the contact and edit it.</p></div>`;
+}
+
+function vContacts(){
+  if(openCust&&S.customers.find(c=>c.id===openCust))return vCustomer(openCust);
+  const q=(contactSearch||'').toLowerCase();
+  const list=S.customers.filter(c=>!q||[c.name,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q))
+    .map(c=>({...c,sold:sum(S.sales.filter(x=>x.customerId===c.id),'amount'),bought:sum(S.purchases.filter(x=>x.supplierId===c.id),'amount'),bal:custBal(c.id)}))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+  return `<div class="card"><h2>Add a contact</h2>
+  <form class="row" data-form="customer">
+    <label>Name<input name="name" required placeholder="Person or business"></label>
+    <label>Phone<input name="phone" type="tel"></label>
+    <label>Email<input name="email" type="email"></label>
+    <label>Notes<input name="notes" placeholder="Optional"></label>
+    <label>Credit limit ($)<input name="limit" type="text" inputmode="decimal" autocomplete="off" placeholder="Blank = no limit"></label>
+    <button type="button" class="btn" data-submit>Add contact</button>
+  </form>
+  <p class="note">One list for everyone — customers you sell to and suppliers you buy from. They appear in the drop-downs on the Sales, Purchases and Customer credit tabs.</p></div>
+  <div class="card"><h2>Contacts <span class="muted">· ${S.customers.length}</span></h2>
+  ${S.customers.length>5?`<label style="margin-bottom:10px;max-width:320px">Search<input id="contactSearch" type="search" value="${esc(contactSearch)}" placeholder="Name, phone, email…"></label>`:''}
+  ${list.length?table(['Name','Phone','Email','Sold to them','Bought from them','Owes you'],list.map(c=>[
+    `<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,esc(c.phone),esc(c.email),
+    c.sold?money(c.sold):'—',c.bought?money(c.bought):'—',c.bal>0.004?`<span class="pill warn">${money(c.bal)}</span>`:'—']),[3,4,5])
+    :empty(S.customers.length?'No contacts match that search.':'No contacts yet. Add your first one above.')}</div>`;
+}
+
+function vCustomer(id){
+  const c=S.customers.find(c=>c.id===id),bal=custBal(id),lim=+c.limit||0;
+  const ev=[...S.sales.filter(x=>x.customerId===id&&x.pay==='credit').map(x=>({...x,k:'sale',coll:'sales'})),
+            ...S.custPayments.filter(x=>x.customerId===id).map(x=>({...x,k:'pay',coll:'custPayments'}))]
+           .sort((a,b)=>a.date.localeCompare(b.date)||(a.id>b.id?1:-1));
+  let run=0;
+  const rows=ev.map(e=>{run+=e.k==='sale'?e.amount:-e.amount;
+    return[fmtDate(e.date),e.k==='sale'?'Credit sale':'<span class="pill">Repayment</span>',esc(e.k==='sale'?e.desc:e.note),
+      e.k==='sale'?money(e.amount):'',e.k==='pay'?money(e.amount):'',money(run),del(e.coll,e.id)];}).reverse();
+  const sales=S.sales.filter(x=>x.customerId===id).sort(byDateDesc);
+  const purch=S.purchases.filter(x=>x.supplierId===id).sort(byDateDesc);
+  const contactLine=[c.phone,c.email].filter(Boolean).map(esc).join(' · ');
+  return `<p><button class="link" data-act="back">← Back to ${tab==='contacts'?'contacts':'credit accounts'}</button></p>
+  <div class="card"><h2 style="margin-bottom:2px">${esc(c.name)}</h2>
+    ${contactLine?`<div class="muted">${contactLine}</div>`:''}${c.notes?`<p class="note">${esc(c.notes)}</p>`:''}</div>
+  <div class="grid">${stat('Owes you',money(bal),'',bal>0.004?'bad':'good')}
+  ${stat('Credit limit',lim?money(lim):'None',lim?`${money(lim-bal)} available`:'')}
+  ${stat('Sold to them',money(sum(sales,'amount')),`${sales.length} sale${sales.length===1?'':'s'}`)}
+  ${stat('Bought from them',money(sum(purch,'amount')),`${purch.length} purchase${purch.length===1?'':'s'}`)}</div>
+  <div class="card"><h2>Take a repayment</h2><form class="row" data-form="custpay">
+    <input type="hidden" name="customerId" value="${id}">
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <label>Note<input name="note" placeholder="Optional"></label>
+    <button type="button" class="btn" data-submit>Record repayment</button></form></div>
+  <div class="card"><h2>Credit statement</h2>${rows.length?table(['Date','Type','Detail','Charged','Paid','Balance',''],rows,[3,4,5]):empty('No credit activity yet.')}</div>
+  <div class="card"><h2>Sales to ${esc(c.name)}</h2>${sales.length?table(['Date','Description','Payment','Amount'],sales.map(x=>[fmtDate(x.date),esc(x.desc),x.pay==='credit'?'<span class="pill warn">Credit</span>':'<span class="pill">Paid</span>',money(x.amount)]),[3]):empty('No sales yet.')}</div>
+  <div class="card"><h2>Purchases from ${esc(c.name)}</h2>${purch.length?table(['Date','Description','Category','Amount'],purch.map(x=>[fmtDate(x.date),esc(x.desc),esc(x.cat),money(x.amount)]),[3]):empty('No purchases yet.')}</div>
+  <div class="card"><h2>Edit contact</h2><form class="row" data-form="custedit">
+    <input type="hidden" name="id" value="${id}">
+    <label>Name<input name="name" value="${esc(c.name)}" required></label>
+    <label>Phone<input name="phone" type="tel" value="${esc(c.phone)}"></label>
+    <label>Email<input name="email" type="email" value="${esc(c.email)}"></label>
+    <label>Notes<input name="notes" value="${esc(c.notes)}"></label>
+    <label>Credit limit ($)<input name="limit" type="text" inputmode="decimal" autocomplete="off" value="${lim||''}" placeholder="Blank = no limit"></label>
+    <button type="button" class="btn" data-submit>Save</button></form>
+    <p class="note"><button class="link" data-act="delcust" data-id="${id}">Delete this contact</button></p></div>`;
+}
+
+function vLoans(){
+  const pays=[...S.loanPayments].sort(byDateDesc);
+  const lname=id=>{const l=S.loans.find(l=>l.id===id);return l?l.lender:'?';};
+  return `<div class="card"><h2>Record a loan repayment</h2>
+  ${S.loans.length?`<form class="row" data-form="loanpay">
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Loan<select name="loanId" required>${S.loans.map(l=>`<option value="${l.id}">${esc(l.lender)}</option>`).join('')}</select></label>
+    <label>Amount paid ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <button type="button" class="btn" data-submit>Record repayment</button>
+  </form>`:empty('Add a loan below first.')}</div>
+  <div class="card"><h2>Add a business loan</h2>
+  <form class="row" data-form="loan">
+    <label>Lender<input name="lender" required placeholder="e.g. Bank, equipment finance"></label>
+    <label>Amount borrowed ($)<input name="principal" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <label>Start date<input type="date" name="start" value="${today()}"></label>
+    <label>Regular repayment ($)<input name="repay" type="text" inputmode="decimal" autocomplete="off"></label>
+    <label>Frequency<select name="freq"><option>Weekly</option><option>Fortnightly</option><option selected>Monthly</option><option>Quarterly</option></select></label>
+    <button type="button" class="btn" data-submit>Add loan</button>
+  </form></div>
+  <div class="card"><h2>Loans</h2>
+  ${S.loans.length?table(['Lender','Borrowed','Repaid','Balance left','Progress',''],S.loans.map(l=>{
+    const prin=sum(loanPaid(l),'amount'),bal=loanBal(l),pct=Math.min(100,Math.max(0,prin/(+l.principal||1)*100));
+    return[`${esc(l.lender)}<div class="muted" style="font-size:12px">${l.repay?money(+l.repay)+' '+esc(l.freq).toLowerCase():''}</div>`,
+      money(+l.principal),money(prin),bal<=0.004?'<span class="pill">Paid off</span>':money(bal),
+      `<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${Math.round(pct)}%</div>`,del('loans',l.id)];
+  }),[1,2,3]):empty('No loans yet.')}</div>
+  <div class="card"><h2>Repayment history <span class="muted">· ${pays.length}</span></h2>
+  ${pays.length?table(['Date','Loan','Amount',''],pays.map(p=>[fmtDate(p.date),esc(lname(p.loanId)),money(p.amount),del('loanPayments',p.id)]),[2],['','Total',money(sum(pays,'amount')),'']):empty('No repayments yet.')}</div>`;
+}
+
+function vBackup(){
+  const n=S.sales.length+S.purchases.length+S.custPayments.length+S.loanPayments.length;
+  return `<div class="card"><h2>Your data</h2>
+  <p class="note" style="margin:0 0 12px">Everything is saved on this device only — nothing is sent anywhere. If you delete the app, clear your browser data or change phones, it's gone, so export a backup regularly and keep it somewhere safe (Files, Google Drive or email it to yourself).</p>
+  <p class="note" style="margin:0 0 12px">${S.customers.length} contacts · ${S.loans.length} loans · ${n} transactions</p>
+  <div class="actions">
+    <button class="btn" data-act="export">Export backup</button>
+    <button class="btn ghost" data-act="import">Restore from backup</button>
+    <button class="btn ghost" data-act="csv">Export transactions (CSV)</button>
+  </div>
+  <input type="file" id="importFile" accept=".json,application/json" hidden></div>
+  <div class="card"><h2>Start fresh</h2><p class="note" style="margin:0 0 12px">Deletes every record. Export a backup first.</p>
+  <button class="btn danger" data-act="reset">Delete all data</button></div>`;
+}
+
+function render(){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  const warn=storageOK?'':'<div class="card storage-warn"><strong>Your entries won’t be kept in this view.</strong> This preview window can’t save data. Download the file, then double-click it to open it in Chrome or Edge.</div>';
+  $('main').innerHTML=warn+{dash:vDash,sales:vSales,purchases:vPurchases,customers:vCustomers,contacts:vContacts,loans:vLoans,backup:vBackup}[tab]();
+}
+
+/* ---------- Saving forms ---------- */
+const amt=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,''));return isFinite(n)?Math.round(n*100)/100:0;};
+const handlers={
+  async sale(d){
+    const amount=amt(d.amount);if(amount<=0)return toast('Enter an amount');
+    if(d.pay==='credit'&&(!d.customerId||d.customerId==='__new'))return toast('Choose a customer for a credit sale');
+    if(d.pay==='credit'){const c=S.customers.find(c=>c.id===d.customerId),lim=+c.limit||0,nb=custBal(c.id)+amount;
+      if(lim&&nb>lim&&!await ask(`This takes ${c.name} to ${money(nb)}, over their ${money(lim)} limit. Add it anyway?`))return;}
+    S.sales.push({id:uid(),date:d.date,customerId:d.customerId==='__new'?'':(d.customerId||''),desc:d.desc.trim(),amount,pay:d.pay});return 'Sale added';
+  },
+  purchase(d){const amount=amt(d.amount);if(amount<=0)return toast('Enter an amount');
+    S.purchases.push({id:uid(),date:d.date,supplierId:d.supplierId==='__new'?'':(d.supplierId||''),desc:d.desc.trim(),cat:d.cat,amount});return 'Purchase added';},
+  async customer(d){const name=d.name.trim();if(!name)return;
+    if(S.customers.some(c=>c.name.toLowerCase()===name.toLowerCase())&&!await ask(`You already have a contact called ${name}. Add another one?`))return;
+    S.customers.push({id:uid(),name,phone:d.phone.trim(),email:(d.email||'').trim(),notes:(d.notes||'').trim(),limit:amt(d.limit)});return 'Contact added';},
+  custedit(d){const c=S.customers.find(c=>c.id===d.id);Object.assign(c,{name:d.name.trim(),phone:d.phone.trim(),email:(d.email||'').trim(),notes:(d.notes||'').trim(),limit:amt(d.limit)});return 'Saved';},
+  async custpay(d){const amount=amt(d.amount);if(!d.customerId||d.customerId==='__new')return toast('Choose a customer');if(amount<=0)return toast('Enter an amount');
+    const bal=custBal(d.customerId);
+    if(amount>bal+0.004&&!await ask(`${custName(d.customerId)} only owes ${money(bal)}. Record ${money(amount)} anyway (leaves them in credit)?`))return;
+    S.custPayments.push({id:uid(),date:d.date,customerId:d.customerId,amount,note:d.note.trim()});return 'Repayment recorded';},
+  loan(d){const principal=amt(d.principal);if(principal<=0)return toast('Enter the amount borrowed');
+    S.loans.push({id:uid(),lender:d.lender.trim(),principal,start:d.start,repay:amt(d.repay),freq:d.freq});return 'Loan added';},
+  async loanpay(d){const amount=amt(d.amount);if(amount<=0)return toast('Enter an amount');
+    const l=S.loans.find(l=>l.id===d.loanId),bal=loanBal(l);
+    if(amount>bal+0.004&&!await ask(`Only ${money(bal)} is left on this loan. Record ${money(amount)} anyway?`))return;
+    S.loanPayments.push({id:uid(),date:d.date,loanId:d.loanId,amount});return 'Repayment recorded';}
+};
+
+async function submitForm(f){
+  if(!f)return;
+  f.querySelectorAll('.bad-field').forEach(el=>el.classList.remove('bad-field'));
+  const missing=[...f.querySelectorAll('[required]')].find(el=>!String(el.value).trim());
+  if(missing){missing.classList.add('bad-field');missing.focus();
+    const lab=missing.closest('label');return toast('Please fill in '+(lab?lab.firstChild.textContent.trim():'all required fields'));}
+  const d={};f.querySelectorAll('input[name],select[name]').forEach(el=>d[el.name]=el.value);
+  let msg;try{msg=await handlers[f.dataset.form]?.(d);}catch(err){console.error(err);return toast('Something went wrong saving that. Please try again.');}
+  if(!msg)return;save();render();toast(msg);
+}
+document.addEventListener('submit',e=>{e.preventDefault();submitForm(e.target);});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('form[data-form] input')){e.preventDefault();submitForm(e.target.closest('form'));}});
+
+document.addEventListener('click',async e=>{
+  const n=e.target.closest('nav button');if(n){tab=n.dataset.tab;openCust=null;render();window.scrollTo(0,0);return;}
+  if(e.target.matches&&e.target.matches('input[type=date]')){try{e.target.showPicker();}catch(err){}}
+  const sb=e.target.closest('[data-submit]');if(sb){submitForm(sb.closest('form'));return;}
+  const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;
+  if(act==='period'){period=b.dataset.p;render();}
+  else if(act==='cust'){if(tab!=='contacts')tab='customers';openCust=b.dataset.id;render();window.scrollTo(0,0);}
+  else if(act==='back'){openCust=null;render();}
+  else if(act==='del'){
+    const coll=b.dataset.coll,id=b.dataset.id;
+    if(coll==='loans'){const l=S.loans.find(l=>l.id===id);if(!await ask(`Delete the ${l.lender} loan and all its repayments?`))return;S.loanPayments=S.loanPayments.filter(p=>p.loanId!==id);}
+    else if(!await ask('Delete this entry?','Delete'))return;
+    S[coll]=S[coll].filter(x=>x.id!==id);save();render();toast('Deleted');
+  }
+  else if(act==='delcust'){
+    const id=b.dataset.id,c=S.customers.find(c=>c.id===id);
+    const has=S.sales.some(x=>x.customerId===id)||S.custPayments.some(x=>x.customerId===id)||S.purchases.some(x=>x.supplierId===id);
+    if(!await ask(has?`${c.name} has sales, repayments or purchases recorded. Deleting removes their credit history; their sales stay in your totals as walk-in sales and purchases keep their name. Continue?`:`Delete ${c.name}?`,'Delete contact'))return;
+    S.sales.forEach(x=>{if(x.customerId===id){x.customerId='';x.pay='cash';}});
+    S.purchases.forEach(x=>{if(x.supplierId===id){x.supplier=c.name;x.supplierId='';}});
+    S.custPayments=S.custPayments.filter(x=>x.customerId!==id);S.customers=S.customers.filter(x=>x.id!==id);
+    openCust=null;save();render();toast('Contact deleted');
+  }
+  else if(act==='export')download(`one-tree-locale-backup-${today()}.json`,JSON.stringify(S,null,2),'application/json');
+  else if(act==='import')$('#importFile').click();
+  else if(act==='csv')exportCsv();
+  else if(act==='reset'){if(await ask('Delete ALL data? This cannot be undone.','Delete everything')&&await ask('Are you really sure? Export a backup first if you haven’t.','Yes, delete it all')){S=blank();save();render();toast('All data deleted');}}
+});
+
+function newContactDialog(){return new Promise(res=>{
+  const o=document.createElement('div');o.className='modal';
+  o.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true"><h2>New contact</h2>
+    <div class="row" style="display:grid;gap:10px;margin-bottom:16px">
+      <label>Name<input data-f="name" placeholder="Person or business"></label>
+      <label>Phone<input data-f="phone" type="tel" placeholder="Optional"></label></div>
+    <div class="actions"><button type="button" class="btn ghost" data-a="0">Cancel</button><button type="button" class="btn" data-a="1">Add contact</button></div></div>`;
+  const nameEl=o.querySelector('[data-f=name]');
+  const done=v=>{o.remove();res(v);};
+  const ok=()=>{const name=nameEl.value.trim();if(!name){nameEl.classList.add('bad-field');nameEl.focus();return;}done({name,phone:o.querySelector('[data-f=phone]').value.trim()});};
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)b.dataset.a==='1'?ok():done(null);else if(e.target===o)done(null);});
+  o.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();ok();}if(e.key==='Escape')done(null);});
+  document.body.appendChild(o);nameEl.focus();
+});}
+document.addEventListener('input',e=>{if(e.target.id==='contactSearch'){contactSearch=e.target.value;const pos=e.target.selectionStart;render();const el=$('#contactSearch');if(el){el.focus();el.setSelectionRange(pos,pos);}}});
+document.addEventListener('change',async e=>{
+  const sel=e.target;
+  if(sel.matches&&sel.matches('select[data-contact]')&&sel.value==='__new'){
+    const c=await newContactDialog();
+    if(!c){sel.value='';return;}
+    const existing=S.customers.find(x=>x.name.toLowerCase()===c.name.toLowerCase());
+    let id=existing&&existing.id;
+    if(!existing){id=uid();S.customers.push({id,name:c.name,phone:c.phone,email:'',notes:'',limit:0});save();toast('Contact added');}
+    document.querySelectorAll('select[data-contact]').forEach(s=>{if(![...s.options].some(o=>o.value===id)){const o=document.createElement('option');o.value=id;o.textContent=c.name;s.insertBefore(o,s.querySelector('option[value="__new"]'));}});
+    sel.value=id;return;
+  }
+  if(e.target.id!=='importFile'||!e.target.files[0])return;
+  const r=new FileReader();r.onload=async()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.sales))throw 0;
+    if(!await ask('Replace everything in the app with this backup?'))return;S=Object.assign(blank(),d);save();render();toast('Backup restored');}
+    catch(x){toast('That file isn’t a backup from this app');}};r.readAsText(e.target.files[0]);
+});
+
+function download(name,text,type){
+  try{const file=new File([text],name,{type});
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:name}).catch(err=>{if(err&&err.name!=='AbortError')saveFile(name,text,type);});return;}}catch(e){}
+  saveFile(name,text,type);
+}
+function saveFile(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function exportCsv(){
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`,lname=id=>(S.loans.find(l=>l.id===id)||{}).lender||'';
+  const rows=[['Date','Type','Party','Description','Category','Amount','Counted as income','On credit'],
+    ...S.sales.map(x=>[x.date,'Sale',custName(x.customerId),x.desc,'',x.amount,x.pay==='credit'?'No (when repaid)':'Yes',x.pay==='credit'?'Yes':'No']),
+    ...S.purchases.map(x=>[x.date,'Purchase',supplierName(x),x.desc,x.cat,-x.amount,'','']),
+    ...S.custPayments.map(x=>[x.date,'Customer repayment',custName(x.customerId),x.note,'',x.amount,'Yes','']),
+    ...S.loanPayments.map(x=>[x.date,'Loan repayment',lname(x.loanId),'','',-x.amount,'',''])];
+  const [h,...b]=rows;b.sort((a,c)=>a[0].localeCompare(c[0]));
+  download(`one-tree-locale-transactions-${today()}.csv`,[h,...b].map(r=>r.map(q).join(',')).join('\n'),'text/csv');
+}
+
+render();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{});}
+</script>
+</body>
+</html>
