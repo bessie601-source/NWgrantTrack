@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="OTL Ledger">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>if(/\/ledger$/.test(location.pathname))location.replace(location.pathname+'/'+location.search);</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
@@ -438,13 +439,13 @@ document.addEventListener('submit',e=>{e.preventDefault();submitForm(e.target);}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('form[data-form] input')){e.preventDefault();submitForm(e.target.closest('form'));}});
 
 document.addEventListener('click',async e=>{
-  const n=e.target.closest('nav button');if(n){tab=n.dataset.tab;openCust=null;render();window.scrollTo(0,0);return;}
+  const n=e.target.closest('nav button');if(n){go(n.dataset.tab,null);return;}
   if(e.target.matches&&e.target.matches('input[type=date]')){try{e.target.showPicker();}catch(err){}}
   const sb=e.target.closest('[data-submit]');if(sb){submitForm(sb.closest('form'));return;}
   const b=e.target.closest('[data-act]');if(!b)return;const act=b.dataset.act;
   if(act==='period'){period=b.dataset.p;render();}
-  else if(act==='cust'){if(tab!=='contacts')tab='customers';openCust=b.dataset.id;render();window.scrollTo(0,0);}
-  else if(act==='back'){openCust=null;render();}
+  else if(act==='cust'){go(tab==='contacts'?'contacts':'customers',b.dataset.id);}
+  else if(act==='back'){if(history.state&&history.state.otl&&history.length>1&&backable)history.back();else go(tab,null);}
   else if(act==='del'){
     const coll=b.dataset.coll,id=b.dataset.id;
     if(coll==='loans'){const l=S.loans.find(l=>l.id===id);if(!await ask(`Delete the ${l.lender} loan and all its repayments?`))return;S.loanPayments=S.loanPayments.filter(p=>p.loanId!==id);}
@@ -516,6 +517,22 @@ function exportCsv(){
   download(`one-tree-locale-transactions-${today()}.csv`,[h,...b].map(r=>r.map(q).join(',')).join('\n'),'text/csv');
 }
 
+/* Phone back button: step back through screens the person visited; from the first screen, back closes the app */
+let backable=false;
+function go(t,c){
+  if(t===tab&&c===openCust){window.scrollTo(0,0);return;}
+  tab=t;openCust=c;
+  try{history.pushState({otl:1,tab,openCust},'');backable=true;}catch(e){}
+  render();window.scrollTo(0,0);
+}
+window.addEventListener('popstate',e=>{
+  document.querySelectorAll('.modal').forEach(m=>m.remove());
+  const st=e.state&&e.state.otl?e.state:{tab:'dash',openCust:null};
+  tab=st.tab||'dash';openCust=st.openCust||null;render();window.scrollTo(0,0);
+});
+// Coming back to a page the phone had paused: redraw so it's never blank
+window.addEventListener('pageshow',e=>{if(e.persisted||!document.querySelector('main').children.length)render();});
+try{history.replaceState({otl:1,tab,openCust},'');}catch(e){}
 render();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{});}
