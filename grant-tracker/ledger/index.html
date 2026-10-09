@@ -143,11 +143,32 @@ tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
 <div id="toast"></div>
 <script>
 const KEY='shop-ledger-v1';
-const blank=()=>({sales:[],purchases:[],customers:[],custPayments:[],loans:[],loanPayments:[]});
+const blank=()=>({sales:[],purchases:[],customers:[],custPayments:[],loans:[],loanPayments:[],loanDraws:[]});
+/* (Runs before the helpers below are defined, so it uses no uid()/today().)
+   Loans are one running account per lender: money borrowed (loanDraws) adds to it, repayments come off it.
+   Older data kept the amount borrowed on each loan and could have several loans per lender; fold those in. */
+function tidyLoans(d){
+  d.loanDraws=d.loanDraws||[];
+  for(const l of d.loans){
+    if(+l.principal>0){
+      const first=d.loanPayments.filter(p=>p.loanId===l.id).map(p=>p.date).sort()[0];
+      d.loanDraws.push({id:'d'+l.id,date:l.start||first||new Date().toISOString().slice(0,10),loanId:l.id,amount:+l.principal,note:'Opening amount'});
+    }
+    l.principal=0;
+  }
+  const keep={};
+  d.loans=d.loans.filter(l=>{const k=String(l.lender||'').trim().toLowerCase();const k0=keep[k];
+    if(!k0){keep[k]=l;return true;}
+    d.loanDraws.forEach(x=>{if(x.loanId===l.id)x.loanId=k0.id;});d.loanPayments.forEach(x=>{if(x.loanId===l.id)x.loanId=k0.id;});
+    if(!+k0.repay&&+l.repay){k0.repay=l.repay;k0.freq=l.freq;}
+    if(l.start&&(!k0.start||l.start<k0.start))k0.start=l.start;
+    return false;});
+  return d;
+}
 let storageOK=true;
 let S=load(), tab='dash', period='month', openCust=null, contactSearch='';
 
-function load(){try{localStorage.setItem(KEY+'-test','1');localStorage.removeItem(KEY+'-test');const r=localStorage.getItem(KEY);if(r)return Object.assign(blank(),JSON.parse(r));}catch(e){storageOK=false;}return blank();}
+function load(){try{localStorage.setItem(KEY+'-test','1');localStorage.removeItem(KEY+'-test');const r=localStorage.getItem(KEY);if(r)return tidyLoans(Object.assign(blank(),JSON.parse(r)));}catch(e){storageOK=false;}return blank();}
 function save(){if(!storageOK)return;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){storageOK=false;toast('Could not save. Export a backup now.');}}
 
 const $=s=>document.querySelector(s);
@@ -171,7 +192,9 @@ const custName=id=>{if(!id)return 'Walk-in';const c=S.customers.find(c=>c.id===i
 const supplierName=x=>{if(x.supplierId){const c=S.customers.find(c=>c.id===x.supplierId);if(c)return c.name;}return x.supplier||'';};
 const custBal=id=>sum(S.sales.filter(x=>x.customerId===id&&x.pay==='credit'),'amount')-sum(S.custPayments.filter(x=>x.customerId===id),'amount');
 const loanPaid=l=>S.loanPayments.filter(p=>p.loanId===l.id);
-const loanBal=l=>(+l.principal||0)-sum(loanPaid(l),'amount');
+const loanDrawn=l=>S.loanDraws.filter(x=>x.loanId===l.id);
+const loanBorrowed=l=>(+l.principal||0)+sum(loanDrawn(l),'amount');
+const loanBal=l=>loanBorrowed(l)-sum(loanPaid(l),'amount');
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);}
 
 function periodRange(){
@@ -347,37 +370,43 @@ function vCustomer(id){
 }
 
 function vLoans(){
-  const pays=[...S.loanPayments].sort(byDateDesc);
   const lname=id=>{const l=S.loans.find(l=>l.id===id);return l?l.lender:'?';};
+  const hist=[...S.loanDraws.map(x=>({...x,kind:'draw'})),...S.loanPayments.map(x=>({...x,kind:'pay'}))].sort(byDateDesc);
+  const owed=S.loans.reduce((t,l)=>t+loanBal(l),0);
   return `<div class="card"><h2>Record a loan repayment</h2>
   ${S.loans.length?`<form class="row" data-form="loanpay">
     <label>Date<input type="date" name="date" value="${today()}" required></label>
-    <label>Loan<select name="loanId" required>${S.loans.map(l=>`<option value="${l.id}">${esc(l.lender)}</option>`).join('')}</select></label>
+    <label>Lender<select name="loanId" required>${S.loans.map(l=>`<option value="${l.id}">${esc(l.lender)} (${money(loanBal(l))} left)</option>`).join('')}</select></label>
     <label>Amount paid ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
     <button type="button" class="btn" data-submit>Record repayment</button>
-  </form>`:empty('Add a loan below first.')}</div>
-  <div class="card"><h2>Add a business loan</h2>
+  </form>`:empty('Record money borrowed below first.')}</div>
+  <div class="card"><h2>Record money borrowed</h2>
+  <p class="note" style="margin:0 0 12px">Borrowing again from the same lender adds to the one balance you owe them.</p>
   <form class="row" data-form="loan">
-    <label>Lender<input name="lender" required placeholder="e.g. Bank, equipment finance"></label>
-    <label>Amount borrowed ($)<input name="principal" type="text" inputmode="decimal" autocomplete="off" required></label>
-    <label>Start date<input type="date" name="start" value="${today()}"></label>
-    <label>Regular repayment ($)<input name="repay" type="text" inputmode="decimal" autocomplete="off"></label>
+    <label>Lender<input name="lender" list="lenderList" required placeholder="e.g. Bank, Mum" autocomplete="off"></label>
+    <datalist id="lenderList">${S.loans.map(l=>`<option value="${esc(l.lender)}">`).join('')}</datalist>
+    <label>Date<input type="date" name="date" value="${today()}" required></label>
+    <label>Amount borrowed ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
+    <label>Note<input name="note" placeholder="Optional"></label>
+    <label>Regular repayment ($)<input name="repay" type="text" inputmode="decimal" autocomplete="off" placeholder="Optional"></label>
     <label>Frequency<select name="freq"><option>Weekly</option><option>Fortnightly</option><option selected>Monthly</option><option>Quarterly</option></select></label>
-    <button type="button" class="btn" data-submit>Add loan</button>
+    <button type="button" class="btn" data-submit>Add borrowing</button>
   </form></div>
   <div class="card"><h2>Loans</h2>
   ${S.loans.length?table(['Lender','Borrowed','Repaid','Balance left','Progress',''],S.loans.map(l=>{
-    const prin=sum(loanPaid(l),'amount'),bal=loanBal(l),pct=Math.min(100,Math.max(0,prin/(+l.principal||1)*100));
-    return[`${esc(l.lender)}<div class="muted" style="font-size:12px">${l.repay?money(+l.repay)+' '+esc(l.freq).toLowerCase():''}</div>`,
-      money(+l.principal),money(prin),bal<=0.004?'<span class="pill">Paid off</span>':money(bal),
+    const bor=loanBorrowed(l),paid=sum(loanPaid(l),'amount'),bal=bor-paid,pct=Math.min(100,Math.max(0,paid/(bor||1)*100));
+    return[`<button class="link" data-act="renameloan" data-id="${l.id}" title="Rename">${esc(l.lender)}</button><div class="muted" style="font-size:12px">${l.repay?money(+l.repay)+' '+esc(l.freq).toLowerCase():''}</div>`,
+      money(bor),money(paid),bal<-0.004?`<span class="pill warn">Overpaid ${money(-bal)}</span>`:bal<=0.004?'<span class="pill">Paid off</span>':money(bal),
       `<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div><div class="muted" style="font-size:12px">${Math.round(pct)}%</div>`,del('loans',l.id)];
-  }),[1,2,3]):empty('No loans yet.')}</div>
-  <div class="card"><h2>Repayment history <span class="muted">· ${pays.length}</span></h2>
-  ${pays.length?table(['Date','Loan','Amount',''],pays.map(p=>[fmtDate(p.date),esc(lname(p.loanId)),money(p.amount),del('loanPayments',p.id)]),[2],['','Total',money(sum(pays,'amount')),'']):empty('No repayments yet.')}</div>`;
+  }),[1,2,3],S.loans.length>1?['Total',money(S.loans.reduce((t,l)=>t+loanBorrowed(l),0)),money(sum(S.loanPayments,'amount')),money(owed),'','']:undefined):empty('No loans yet.')}
+  ${S.loans.length?'<p class="note">Tap a lender’s name to rename it. Giving it the same name as another lender joins the two into one balance.</p>':''}</div>
+  <div class="card"><h2>Loan history <span class="muted">· ${hist.length}</span></h2>
+  ${hist.length?table(['Date','Lender','Type','Amount',''],hist.map(x=>[fmtDate(x.date),esc(lname(x.loanId))+(x.note?`<div class="muted" style="font-size:12px">${esc(x.note)}</div>`:''),
+    x.kind==='draw'?'<span class="pill warn">Borrowed</span>':'<span class="pill">Repaid</span>',money(x.amount),del(x.kind==='draw'?'loanDraws':'loanPayments',x.id)]),[3]):empty('Nothing recorded yet.')}</div>`;
 }
 
 function vBackup(){
-  const n=S.sales.length+S.purchases.length+S.custPayments.length+S.loanPayments.length;
+  const n=S.sales.length+S.purchases.length+S.custPayments.length+S.loanPayments.length+S.loanDraws.length;
   return `<div class="card"><h2>Your data</h2>
   <p class="note" style="margin:0 0 12px">Everything is saved on this device only — nothing is sent anywhere. If you delete the app, clear your browser data or change phones, it's gone, so export a backup regularly and keep it somewhere safe (Files, Google Drive or email it to yourself).</p>
   <p class="note" style="margin:0 0 12px">${S.customers.length} contacts · ${S.loans.length} loans · ${n} transactions</p>
@@ -420,11 +449,16 @@ const handlers={
     const bal=custBal(d.customerId);
     if(amount>bal+0.004&&!await ask(`${custName(d.customerId)} only owes ${money(bal)}. Record ${money(amount)} anyway (leaves them in credit)?`))return;
     S.custPayments.push({id:uid(),date:d.date,customerId:d.customerId,amount,note:d.note.trim()});return 'Repayment recorded';},
-  loan(d){const principal=amt(d.principal);if(principal<=0)return toast('Enter the amount borrowed');
-    S.loans.push({id:uid(),lender:d.lender.trim(),principal,start:d.start,repay:amt(d.repay),freq:d.freq});return 'Loan added';},
+  loan(d){const amount=amt(d.amount),name=d.lender.trim();if(!name)return toast('Enter the lender');if(amount<=0)return toast('Enter the amount borrowed');
+    let l=S.loans.find(l=>l.lender.trim().toLowerCase()===name.toLowerCase());const isNew=!l;
+    if(!l){l={id:uid(),lender:name,principal:0,start:d.date,repay:0,freq:'Monthly'};S.loans.push(l);}
+    if(amt(d.repay)>0){l.repay=amt(d.repay);l.freq=d.freq;}
+    if(!l.start||d.date<l.start)l.start=d.date;
+    S.loanDraws.push({id:uid(),date:d.date,loanId:l.id,amount,note:(d.note||'').trim()});
+    return isNew?'Loan added':`Added to ${l.lender} — now ${money(loanBal(l))} owed`;},
   async loanpay(d){const amount=amt(d.amount);if(amount<=0)return toast('Enter an amount');
     const l=S.loans.find(l=>l.id===d.loanId),bal=loanBal(l);
-    if(amount>bal+0.004&&!await ask(`Only ${money(bal)} is left on this loan. Record ${money(amount)} anyway?`))return;
+    if(amount>bal+0.004&&!await ask(`Only ${money(Math.max(0,bal))} is owed to ${l.lender}. Record ${money(amount)} anyway?`))return;
     S.loanPayments.push({id:uid(),date:d.date,loanId:d.loanId,amount});return 'Repayment recorded';}
 };
 
@@ -451,7 +485,7 @@ document.addEventListener('click',async e=>{
   else if(act==='back'){if(history.state&&history.state.otl&&history.length>1&&backable)history.back();else go(tab,null);}
   else if(act==='del'){
     const coll=b.dataset.coll,id=b.dataset.id;
-    if(coll==='loans'){const l=S.loans.find(l=>l.id===id);if(!await ask(`Delete the ${l.lender} loan and all its repayments?`))return;S.loanPayments=S.loanPayments.filter(p=>p.loanId!==id);}
+    if(coll==='loans'){const l=S.loans.find(l=>l.id===id);if(!await ask(`Delete the ${l.lender} loan and everything borrowed and repaid on it?`))return;S.loanPayments=S.loanPayments.filter(p=>p.loanId!==id);S.loanDraws=S.loanDraws.filter(p=>p.loanId!==id);}
     else if(!await ask('Delete this entry?','Delete'))return;
     S[coll]=S[coll].filter(x=>x.id!==id);save();render();toast('Deleted');
   }
@@ -463,6 +497,18 @@ document.addEventListener('click',async e=>{
     S.purchases.forEach(x=>{if(x.supplierId===id){x.supplier=c.name;x.supplierId='';}});
     S.custPayments=S.custPayments.filter(x=>x.customerId!==id);S.customers=S.customers.filter(x=>x.id!==id);
     openCust=null;save();render();toast('Contact deleted');
+  }
+  else if(act==='renameloan'){
+    const l=S.loans.find(l=>l.id===b.dataset.id);if(!l)return;
+    const name=await fieldDialog(`Rename ${l.lender}`,'Lender',{value:l.lender,okLabel:'Rename'});
+    if(!name||!name.trim()||name.trim()===l.lender)return;
+    const other=S.loans.find(o=>o!==l&&o.lender.trim().toLowerCase()===name.trim().toLowerCase());
+    if(other){
+      if(!await ask(`Join ${l.lender} into ${other.lender}? Everything borrowed and repaid moves across and becomes one balance.`,'Join them'))return;
+      S.loanDraws.forEach(x=>{if(x.loanId===l.id)x.loanId=other.id;});S.loanPayments.forEach(x=>{if(x.loanId===l.id)x.loanId=other.id;});
+      if(!+other.repay&&+l.repay){other.repay=l.repay;other.freq=l.freq;}
+      S.loans=S.loans.filter(x=>x!==l);save();render();toast(`Joined — ${money(loanBal(other))} owed to ${other.lender}`);
+    } else {l.lender=name.trim();save();render();toast('Renamed');}
   }
   else if(act==='export')download(`one-tree-locale-backup-${today()}.json`,JSON.stringify(S,null,2),'application/json');
   else if(act==='import')$('#importFile').click();
@@ -501,7 +547,7 @@ document.addEventListener('change',async e=>{
     const r=new FileReader();r.onload=()=>importCsv(r.result);r.onerror=()=>toast('Couldn’t read that file');r.readAsText(f);return;}
   if(e.target.id!=='importFile'||!e.target.files[0])return;
   const r=new FileReader();r.onload=async()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.sales))throw 0;
-    if(!await ask('Replace everything in the app with this backup?'))return;S=Object.assign(blank(),d);save();render();toast('Backup restored');}
+    if(!await ask('Replace everything in the app with this backup?'))return;S=tidyLoans(Object.assign(blank(),d));save();render();toast('Backup restored');}
     catch(x){toast('That file isn’t a backup from this app');}};r.readAsText(e.target.files[0]);
 });
 
@@ -518,6 +564,7 @@ function exportCsv(){
     ...S.sales.map(x=>[x.date,'Sale',custName(x.customerId),x.desc,'',x.amount,x.pay==='credit'?'No (when repaid)':'Yes',x.pay==='credit'?'Yes':'No']),
     ...S.purchases.map(x=>[x.date,'Purchase',supplierName(x),x.desc,x.cat,-x.amount,'','']),
     ...S.custPayments.map(x=>[x.date,'Customer repayment',custName(x.customerId),x.note,'',x.amount,'Yes','']),
+    ...S.loanDraws.map(x=>[x.date,'Loan borrowed',lname(x.loanId),x.note,'',x.amount,'','']),
     ...S.loanPayments.map(x=>[x.date,'Loan repayment',lname(x.loanId),'','',-x.amount,'',''])];
   const [h,...b]=rows;b.sort((a,c)=>a[0].localeCompare(c[0]));
   download(`one-tree-locale-transactions-${today()}.csv`,[h,...b].map(r=>r.map(q).join(',')).join('\n'),'text/csv');
@@ -542,17 +589,20 @@ function csvDate(v){
   if(m){const y=m[3].length===2?'20'+m[3]:m[3];return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
   return '';
 }
-function amountDialog(m){return new Promise(res=>{
+function fieldDialog(m,label,{value='',decimal=false,okLabel='Save',cancelLabel='Cancel'}={}){return new Promise(res=>{
   const o=document.createElement('div');o.className='modal';
   o.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true"><p></p>
-    <div class="row" style="display:grid;gap:10px;margin-bottom:16px"><label>Amount borrowed ($)<input data-f="amt" type="text" inputmode="decimal" autocomplete="off"></label></div>
-    <div class="actions"><button type="button" class="btn ghost" data-a="0">Skip</button><button type="button" class="btn" data-a="1">Save</button></div></div>`;
-  o.querySelector('p').textContent=m;const el=o.querySelector('[data-f=amt]');
+    <div class="row" style="display:grid;gap:10px;margin-bottom:16px"><label><span></span><input data-f="v" type="text" autocomplete="off"></label></div>
+    <div class="actions"><button type="button" class="btn ghost" data-a="0"></button><button type="button" class="btn" data-a="1"></button></div></div>`;
+  o.querySelector('p').textContent=m;o.querySelector('label span').textContent=label;
+  o.querySelector('[data-a="0"]').textContent=cancelLabel;o.querySelector('[data-a="1"]').textContent=okLabel;
+  const el=o.querySelector('[data-f=v]');el.value=value;if(decimal)el.inputMode='decimal';
   const done=v=>{o.remove();res(v);};
-  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)done(b.dataset.a==='1'?amt(el.value):null);});
-  o.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();done(amt(el.value));}if(e.key==='Escape')done(null);});
-  document.body.appendChild(o);el.focus();
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)done(b.dataset.a==='1'?el.value:null);});
+  o.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();done(el.value);}if(e.key==='Escape')done(null);});
+  document.body.appendChild(o);el.focus();el.select();
 });}
+async function amountDialog(m){const v=await fieldDialog(m,'Amount borrowed ($)',{decimal:true,cancelLabel:'Skip'});return v==null?null:amt(v);}
 async function importCsv(text){
   const rows=parseCsv(text);
   const head=(rows[0]||[]).map(h=>h.trim().toLowerCase()),col=n=>head.indexOf(n);
@@ -567,8 +617,9 @@ async function importCsv(text){
     ...S.sales.map(x=>fp('sale',x.date,x.customerId?custName(x.customerId):'',x.desc,x.amount)),
     ...S.purchases.map(x=>fp('purchase',x.date,supplierName(x),x.desc,x.amount)),
     ...S.custPayments.map(x=>fp('customer repayment',x.date,custName(x.customerId),x.note,x.amount)),
+    ...S.loanDraws.map(x=>fp('loan borrowed',x.date,lname(x.loanId),x.note,x.amount)),
     ...S.loanPayments.map(x=>fp('loan repayment',x.date,lname(x.loanId),'',x.amount))]);
-  const add={sales:[],purchases:[],custPayments:[],loanPayments:[]},newContacts=[],newLoans=[];let dup=0,bad=0;
+  const add={sales:[],purchases:[],custPayments:[],loanPayments:[],loanDraws:[]},newContacts=[],newLoans=[];let dup=0,bad=0;
   const contactId=name=>{const k=nameKey(name);if(!k||k==='walk-in'||k==='(deleted contact)')return '';
     let c=S.customers.find(c=>nameKey(c.name)===k)||newContacts.find(c=>nameKey(c.name)===k);
     if(!c){c={id:uid(),name:name.trim(),phone:'',email:'',notes:'',limit:0};newContacts.push(c);}return c.id;};
@@ -577,27 +628,29 @@ async function importCsv(text){
     if(!l){l={id:uid(),lender:name.trim()||'Loan',principal:0,start:'',repay:0,freq:'Monthly'};newLoans.push(l);}return l;};
   for(const r of rows.slice(1)){
     const type=get(r,'type').toLowerCase(),date=csvDate(get(r,'date')),party=get(r,'party'),desc=get(r,'desc'),a=Math.abs(amt(get(r,'amount')));
-    if(!date||!a||!['sale','purchase','customer repayment','loan repayment'].includes(type)){bad++;continue;}
+    if(!date||!a||!['sale','purchase','customer repayment','loan repayment','loan borrowed'].includes(type)){bad++;continue;}
     const key=fp(type,date,party==='Walk-in'?'':party,type==='loan repayment'?'':desc,a);
     if(have.has(key)){dup++;continue;}have.add(key);
     if(type==='sale')add.sales.push({id:uid(),date,customerId:contactId(party),desc,amount:a,pay:/^y/i.test(get(r,'credit'))?'credit':'cash'});
     else if(type==='purchase'){const sid=contactId(party);add.purchases.push({id:uid(),date,supplierId:sid,supplier:sid?'':party,desc,cat:get(r,'cat')||'Other',amount:a});}
     else if(type==='customer repayment'){const cid=contactId(party);if(!cid){bad++;continue;}add.custPayments.push({id:uid(),date,customerId:cid,amount:a,note:desc});}
+    else if(type==='loan borrowed'){const l=loanFor(party);if(!l.start||date<l.start)l.start=date;add.loanDraws.push({id:uid(),date,loanId:l.id,amount:a,note:desc});}
     else{const l=loanFor(party);if(!l.start||date<l.start)l.start=date;add.loanPayments.push({id:uid(),date,loanId:l.id,amount:a});}
   }
-  const n=add.sales.length+add.purchases.length+add.custPayments.length+add.loanPayments.length;
+  const n=add.sales.length+add.purchases.length+add.custPayments.length+add.loanPayments.length+add.loanDraws.length;
   if(!n){toast(dup?'Everything in that CSV is already in the app':'No transactions found in that CSV');return;}
-  const parts=[`${add.sales.length} sales`,`${add.purchases.length} purchases`,`${add.custPayments.length} customer repayments`,`${add.loanPayments.length} loan repayments`];
+  const parts=[`${add.sales.length} sales`,`${add.purchases.length} purchases`,`${add.custPayments.length} customer repayments`,`${add.loanPayments.length} loan repayments`];if(add.loanDraws.length)parts.push(`${add.loanDraws.length} loan borrowings`);
   let msg=`Add ${n} transactions from this CSV (${parts.join(', ')})?`;
   if(newContacts.length)msg+=` ${newContacts.length} new contact${newContacts.length>1?'s':''} will be created.`;
   if(dup)msg+=` ${dup} already in the app will be skipped.`;
   if(bad)msg+=` ${bad} row${bad>1?'s':''} couldn’t be read and will be skipped.`;
   if(!await ask(msg,'Import'))return;
-  // A CSV only has the repayments, not how much was borrowed, so ask for each new loan
+  // Older CSVs only have the repayments, not how much was borrowed, so ask for any new lender without borrowing rows
   for(const l of newLoans){
+    if(add.loanDraws.some(x=>x.loanId===l.id))continue;
     const paid=sum(add.loanPayments.filter(p=>p.loanId===l.id),'amount');
     const v=await amountDialog(`The CSV has ${money(paid)} repaid to ${l.lender}, but not how much was borrowed. Enter the amount borrowed so the balance is right (Skip to use ${money(paid)}).`);
-    l.principal=v||paid;
+    add.loanDraws.push({id:uid(),date:l.start||today(),loanId:l.id,amount:v||paid,note:'Opening amount'});
   }
   S.customers.push(...newContacts);S.loans.push(...newLoans);
   for(const k in add)S[k].push(...add[k]);
