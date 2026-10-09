@@ -3,7 +3,7 @@
   "short_name": "OTL Ledger",
   "description": "Sales, purchases, customer credit and loans for One Tree Locale.",
   "id": "./",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
