@@ -385,8 +385,11 @@ function vBackup(){
     <button class="btn" data-act="export">Export backup</button>
     <button class="btn ghost" data-act="import">Restore from backup</button>
     <button class="btn ghost" data-act="csv">Export transactions (CSV)</button>
+    <button class="btn ghost" data-act="csvin">Import transactions (CSV)</button>
   </div>
-  <input type="file" id="importFile" accept=".json,application/json" hidden></div>
+  <p class="note" style="margin:12px 0 0">Importing a CSV adds its sales, purchases and repayments to what's already here and skips any that are already in the app. A CSV doesn't hold contact phone numbers, emails or credit limits, so add those again if you need them. The backup file keeps everything.</p>
+  <input type="file" id="importFile" accept=".json,application/json" hidden>
+  <input type="file" id="csvFile" accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel,text/plain" hidden></div>
   <div class="card"><h2>Start fresh</h2><p class="note" style="margin:0 0 12px">Deletes every record. Export a backup first.</p>
   <button class="btn danger" data-act="reset">Delete all data</button></div>`;
 }
@@ -464,6 +467,7 @@ document.addEventListener('click',async e=>{
   else if(act==='export')download(`one-tree-locale-backup-${today()}.json`,JSON.stringify(S,null,2),'application/json');
   else if(act==='import')$('#importFile').click();
   else if(act==='csv')exportCsv();
+  else if(act==='csvin')$('#csvFile').click();
   else if(act==='reset'){if(await ask('Delete ALL data? This cannot be undone.','Delete everything')&&await ask('Are you really sure? Export a backup first if you haven’t.','Yes, delete it all')){S=blank();save();render();toast('All data deleted');}}
 });
 
@@ -493,6 +497,8 @@ document.addEventListener('change',async e=>{
     document.querySelectorAll('select[data-contact]').forEach(s=>{if(![...s.options].some(o=>o.value===id)){const o=document.createElement('option');o.value=id;o.textContent=c.name;s.insertBefore(o,s.querySelector('option[value="__new"]'));}});
     sel.value=id;return;
   }
+  if(e.target.id==='csvFile'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
+    const r=new FileReader();r.onload=()=>importCsv(r.result);r.onerror=()=>toast('Couldn’t read that file');r.readAsText(f);return;}
   if(e.target.id!=='importFile'||!e.target.files[0])return;
   const r=new FileReader();r.onload=async()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.sales))throw 0;
     if(!await ask('Replace everything in the app with this backup?'))return;S=Object.assign(blank(),d);save();render();toast('Backup restored');}
@@ -515,6 +521,87 @@ function exportCsv(){
     ...S.loanPayments.map(x=>[x.date,'Loan repayment',lname(x.loanId),'','',-x.amount,'',''])];
   const [h,...b]=rows;b.sort((a,c)=>a[0].localeCompare(c[0]));
   download(`one-tree-locale-transactions-${today()}.csv`,[h,...b].map(r=>r.map(q).join(',')).join('\n'),'text/csv');
+}
+
+/* Import a CSV made by "Export transactions (CSV)" */
+function parseCsv(t){
+  const rows=[];let row=[],f='',q=false;t=String(t).replace(/^\uFEFF/,'');
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f='';}
+    else f+=c;}
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows.filter(r=>r.some(v=>v.trim()!==''));
+}
+function csvDate(v){
+  v=String(v||'').trim();let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/); // Australian day/month/year, e.g. after opening in Excel
+  if(m){const y=m[3].length===2?'20'+m[3]:m[3];return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  return '';
+}
+function amountDialog(m){return new Promise(res=>{
+  const o=document.createElement('div');o.className='modal';
+  o.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true"><p></p>
+    <div class="row" style="display:grid;gap:10px;margin-bottom:16px"><label>Amount borrowed ($)<input data-f="amt" type="text" inputmode="decimal" autocomplete="off"></label></div>
+    <div class="actions"><button type="button" class="btn ghost" data-a="0">Skip</button><button type="button" class="btn" data-a="1">Save</button></div></div>`;
+  o.querySelector('p').textContent=m;const el=o.querySelector('[data-f=amt]');
+  const done=v=>{o.remove();res(v);};
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)done(b.dataset.a==='1'?amt(el.value):null);});
+  o.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();done(amt(el.value));}if(e.key==='Escape')done(null);});
+  document.body.appendChild(o);el.focus();
+});}
+async function importCsv(text){
+  const rows=parseCsv(text);
+  const head=(rows[0]||[]).map(h=>h.trim().toLowerCase()),col=n=>head.indexOf(n);
+  const C={date:col('date'),type:col('type'),party:col('party'),desc:col('description'),cat:col('category'),amount:col('amount'),credit:col('on credit')};
+  if(C.date<0||C.type<0||C.amount<0){toast('That CSV isn’t one exported from this app');return;}
+  const get=(r,k)=>C[k]<0?'':String(r[C[k]]??'').trim();
+  const nameKey=n=>String(n||'').trim().toLowerCase();
+  // Fingerprints of what's already here, so importing the same file twice doesn't double up
+  const fp=(type,date,party,desc,a)=>[type,date,nameKey(party),nameKey(desc),Math.abs(+a).toFixed(2)].join('|');
+  const lname=id=>(S.loans.find(l=>l.id===id)||{}).lender||'';
+  const have=new Set([
+    ...S.sales.map(x=>fp('sale',x.date,x.customerId?custName(x.customerId):'',x.desc,x.amount)),
+    ...S.purchases.map(x=>fp('purchase',x.date,supplierName(x),x.desc,x.amount)),
+    ...S.custPayments.map(x=>fp('customer repayment',x.date,custName(x.customerId),x.note,x.amount)),
+    ...S.loanPayments.map(x=>fp('loan repayment',x.date,lname(x.loanId),'',x.amount))]);
+  const add={sales:[],purchases:[],custPayments:[],loanPayments:[]},newContacts=[],newLoans=[];let dup=0,bad=0;
+  const contactId=name=>{const k=nameKey(name);if(!k||k==='walk-in'||k==='(deleted contact)')return '';
+    let c=S.customers.find(c=>nameKey(c.name)===k)||newContacts.find(c=>nameKey(c.name)===k);
+    if(!c){c={id:uid(),name:name.trim(),phone:'',email:'',notes:'',limit:0};newContacts.push(c);}return c.id;};
+  const loanFor=name=>{const k=nameKey(name)||'loan';
+    let l=S.loans.find(l=>nameKey(l.lender)===k)||newLoans.find(l=>nameKey(l.lender)===k);
+    if(!l){l={id:uid(),lender:name.trim()||'Loan',principal:0,start:'',repay:0,freq:'Monthly'};newLoans.push(l);}return l;};
+  for(const r of rows.slice(1)){
+    const type=get(r,'type').toLowerCase(),date=csvDate(get(r,'date')),party=get(r,'party'),desc=get(r,'desc'),a=Math.abs(amt(get(r,'amount')));
+    if(!date||!a||!['sale','purchase','customer repayment','loan repayment'].includes(type)){bad++;continue;}
+    const key=fp(type,date,party==='Walk-in'?'':party,type==='loan repayment'?'':desc,a);
+    if(have.has(key)){dup++;continue;}have.add(key);
+    if(type==='sale')add.sales.push({id:uid(),date,customerId:contactId(party),desc,amount:a,pay:/^y/i.test(get(r,'credit'))?'credit':'cash'});
+    else if(type==='purchase'){const sid=contactId(party);add.purchases.push({id:uid(),date,supplierId:sid,supplier:sid?'':party,desc,cat:get(r,'cat')||'Other',amount:a});}
+    else if(type==='customer repayment'){const cid=contactId(party);if(!cid){bad++;continue;}add.custPayments.push({id:uid(),date,customerId:cid,amount:a,note:desc});}
+    else{const l=loanFor(party);if(!l.start||date<l.start)l.start=date;add.loanPayments.push({id:uid(),date,loanId:l.id,amount:a});}
+  }
+  const n=add.sales.length+add.purchases.length+add.custPayments.length+add.loanPayments.length;
+  if(!n){toast(dup?'Everything in that CSV is already in the app':'No transactions found in that CSV');return;}
+  const parts=[`${add.sales.length} sales`,`${add.purchases.length} purchases`,`${add.custPayments.length} customer repayments`,`${add.loanPayments.length} loan repayments`];
+  let msg=`Add ${n} transactions from this CSV (${parts.join(', ')})?`;
+  if(newContacts.length)msg+=` ${newContacts.length} new contact${newContacts.length>1?'s':''} will be created.`;
+  if(dup)msg+=` ${dup} already in the app will be skipped.`;
+  if(bad)msg+=` ${bad} row${bad>1?'s':''} couldn’t be read and will be skipped.`;
+  if(!await ask(msg,'Import'))return;
+  // A CSV only has the repayments, not how much was borrowed, so ask for each new loan
+  for(const l of newLoans){
+    const paid=sum(add.loanPayments.filter(p=>p.loanId===l.id),'amount');
+    const v=await amountDialog(`The CSV has ${money(paid)} repaid to ${l.lender}, but not how much was borrowed. Enter the amount borrowed so the balance is right (Skip to use ${money(paid)}).`);
+    l.principal=v||paid;
+  }
+  S.customers.push(...newContacts);S.loans.push(...newLoans);
+  for(const k in add)S[k].push(...add[k]);
+  save();render();toast(`Imported ${n} transactions`);
 }
 
 /* Phone back button: step back through screens the person visited; from the first screen, back closes the app */
