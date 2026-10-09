@@ -81,6 +81,8 @@ tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
 .pill.bad{background:var(--warn-soft);color:var(--warn-ink)}
 .x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px}
 .x:hover{color:var(--warn)}
+.acts{white-space:nowrap}
+.acts .x[data-act=edit]:hover{color:var(--accent)}
 .link{background:none;border:none;padding:0;font:inherit;color:var(--grape);font-weight:500;cursor:pointer;text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:3px}
 @media (prefers-color-scheme:dark){.link{color:var(--credit-ink)}.btn.ghost{color:var(--credit-ink)}}
 .empty{color:var(--muted);font-size:14px;padding:6px 0}
@@ -107,6 +109,8 @@ tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
   .tablewrap td:has(.x){position:absolute;top:2px;right:4px;width:auto;padding:0}
   .tablewrap td:has(.x)::before{content:none}
   .tablewrap tbody td:first-child{padding-right:28px}
+  .tablewrap tbody tr:has(.acts .x+.x) td:first-child{padding-right:64px}
+  .acts .x{padding:4px 8px}
   .tablewrap tfoot tr{display:flex;justify-content:space-between;padding:6px 10px}
   .tablewrap tfoot td{display:inline;width:auto;padding:0}
   .tablewrap tfoot td::before{content:none}
@@ -213,7 +217,8 @@ function table(heads,rows,numCols=[],foot){
   ${foot?`<tfoot><tr>${foot.map((v,i)=>cell(v,i)).join('')}</tr></tfoot>`:''}</table></div>`;
 }
 const empty=m=>`<div class="empty">${m}</div>`;
-const del=(coll,id)=>`<button class="x" title="Delete" data-act="del" data-coll="${coll}" data-id="${id}">×</button>`;
+const EDITABLE=['sales','purchases','custPayments','loanPayments','loanDraws'];
+const del=(coll,id)=>`<span class="acts">${EDITABLE.includes(coll)?`<button class="x" title="Edit" aria-label="Edit" data-act="edit" data-coll="${coll}" data-id="${id}">✎</button>`:''}<button class="x" title="Delete" aria-label="Delete" data-act="del" data-coll="${coll}" data-id="${id}">×</button></span>`;
 const contactOptions=(placeholder,disabledPh=false)=>`<option value=""${disabledPh?' disabled selected':''}>${placeholder}</option>`+
   [...S.customers].sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')+
   '<option value="__new">+ Add new contact…</option>';
@@ -510,6 +515,7 @@ document.addEventListener('click',async e=>{
       S.loans=S.loans.filter(x=>x!==l);save();render();toast(`Joined — ${money(loanBal(other))} owed to ${other.lender}`);
     } else {l.lender=name.trim();save();render();toast('Renamed');}
   }
+  else if(act==='edit')editEntry(b.dataset.coll,b.dataset.id);
   else if(act==='export')download(`one-tree-locale-backup-${today()}.json`,JSON.stringify(S,null,2),'application/json');
   else if(act==='import')$('#importFile').click();
   else if(act==='csv')exportCsv();
@@ -568,6 +574,56 @@ function exportCsv(){
     ...S.loanPayments.map(x=>[x.date,'Loan repayment',lname(x.loanId),'','',-x.amount,'',''])];
   const [h,...b]=rows;b.sort((a,c)=>a[0].localeCompare(c[0]));
   download(`one-tree-locale-transactions-${today()}.csv`,[h,...b].map(r=>r.map(q).join(',')).join('\n'),'text/csv');
+}
+
+/* Edit a sale, purchase, repayment or borrowing in a pop-up */
+function editEntry(coll,id){
+  const x=S[coll].find(x=>x.id===id);if(!x)return;
+  const opt=(v,l,sel)=>`<option value="${esc(v)}"${sel?' selected':''}>${esc(l)}</option>`;
+  const contactSel=(name,cur,ph,req)=>`<select name="${name}" data-contact${req?' required':''}>${contactOptions(ph,req)}</select>`;
+  const loanSel=cur=>`<select name="loanId">${S.loans.map(l=>opt(l.id,l.lender,l.id===cur)).join('')}</select>`;
+  const cats=['Stock','Supplies','Rent','Wages','Utilities','Fuel & transport','Equipment','Other'];
+  const f={
+    date:`<label>Date<input type="date" name="date" value="${esc(x.date)}" required></label>`,
+    amount:`<label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" value="${(+x.amount).toFixed(2)}"></label>`};
+  const spec={
+    sales:['Edit sale',[f.date,`<label>Customer${contactSel('customerId',x.customerId,'Walk-in / no contact')}</label>`,
+      `<label>Description<input name="desc" value="${esc(x.desc)}"></label>`,f.amount,
+      `<label>Payment<select name="pay">${opt('cash','Paid now',x.pay!=='credit')}${opt('credit','On credit (their account)',x.pay==='credit')}</select></label>`]],
+    purchases:['Edit purchase',[f.date,`<label>Paid to${contactSel('supplierId',x.supplierId,x.supplier&&!x.supplierId?x.supplier:'— Not listed —')}</label>`,
+      `<label>Description<input name="desc" value="${esc(x.desc)}"></label>`,
+      `<label>Category<select name="cat">${[...new Set([...cats,x.cat].filter(Boolean))].map(c=>opt(c,c,c===x.cat)).join('')}</select></label>`,f.amount]],
+    custPayments:['Edit customer repayment',[f.date,`<label>Customer${contactSel('customerId',x.customerId,'Choose customer',true)}</label>`,f.amount,
+      `<label>Note<input name="note" value="${esc(x.note)}"></label>`]],
+    loanPayments:['Edit loan repayment',[f.date,`<label>Lender${loanSel(x.loanId)}</label>`,f.amount]],
+    loanDraws:['Edit money borrowed',[f.date,`<label>Lender${loanSel(x.loanId)}</label>`,f.amount,`<label>Note<input name="note" value="${esc(x.note)}"></label>`]]}[coll];
+  const o=document.createElement('div');o.className='modal';
+  o.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true"><h2>${spec[0]}</h2>
+    <div class="row edit-fields" style="display:grid;gap:10px;margin-bottom:16px">${spec[1].join('')}</div>
+    <div class="actions"><button type="button" class="btn ghost" data-a="0">Cancel</button><button type="button" class="btn" data-a="1">Save changes</button></div></div>`;
+  const el=n=>o.querySelector(`[name="${n}"]`);
+  ['customerId','supplierId'].forEach(n=>{const s=el(n);if(s)s.value=(n==='customerId'?x.customerId:x.supplierId)||'';});
+  const close=()=>{o.remove();document.removeEventListener('keydown',key,true);};
+  const key=e=>{if(e.key==='Escape'&&document.querySelectorAll('.modal').length===1){e.stopPropagation();close();}};
+  const saveIt=()=>{
+    const v=n=>{const e=el(n);return e?e.value:undefined;};
+    const amount=amt(v('amount'));
+    if(!v('date'))return toast('Choose a date');
+    if(amount<=0)return toast('Enter an amount');
+    const who=v('customerId');
+    if(coll==='sales'&&v('pay')==='credit'&&(!who||who==='__new'))return toast('Choose a customer for a credit sale');
+    if(coll==='custPayments'&&(!who||who==='__new'))return toast('Choose the customer');
+    x.date=v('date');x.amount=amount;
+    if(coll==='sales'){x.customerId=who==='__new'?'':(who||'');x.desc=v('desc').trim();x.pay=v('pay');}
+    if(coll==='purchases'){const sid=v('supplierId');if(sid&&sid!=='__new'){x.supplierId=sid;x.supplier='';}else if(x.supplierId){x.supplierId='';x.supplier='';}
+      x.desc=v('desc').trim();x.cat=v('cat');}
+    if(coll==='custPayments'){x.customerId=who;x.note=v('note').trim();}
+    if(coll==='loanPayments'||coll==='loanDraws'){x.loanId=v('loanId');if(coll==='loanDraws')x.note=v('note').trim();}
+    save();close();render();toast('Changes saved');
+  };
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b){b.dataset.a==='1'?saveIt():close();}});
+  o.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();saveIt();}});
+  document.addEventListener('keydown',key,true);document.body.appendChild(o);
 }
 
 /* Import a CSV made by "Export transactions (CSV)" */
