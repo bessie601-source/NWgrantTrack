@@ -116,6 +116,7 @@
     .stat { display: flex; align-items: center; gap: 0.75rem; }
     .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--otl-forest); font-family: 'Playfair Display', serif; }
     .stat-label { font-size: 0.875rem; color: var(--otl-muted); }
+    .stat-note { display: block; font-size: 0.75rem; }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
@@ -615,7 +616,7 @@
     <div class="stats-content">
       <div class="stat">
         <span class="stat-value" id="stat-open">0</span>
-        <span class="stat-label">Open Opportunities</span>
+        <span class="stat-label">Open Opportunities<span class="stat-note" id="stat-open-note"></span></span>
       </div>
       <div class="stat">
         <span class="stat-value" id="stat-closing">0</span>
@@ -811,111 +812,8 @@
   </div>
 
   <script>
-    // Grants data
-    const initialGrants = [
-      {
-        id: 1,
-        name: "Community Environment Program",
-        funder: "Australian Government (DCCEEW)",
-        category: "environmental",
-        eligibility: "nfp",
-        eligibilityDetails: "NFPs, community groups, Landcare networks. REQUIREMENTS: Valid ABN, incorporated or auspicing arrangement. Not for individuals.",
-        assessmentCriteria: "Priority: Threatened species, habitat restoration. Weighting: Environmental outcomes (40%), community involvement (30%), feasibility (20%), value for money (10%).",
-        amount: "$2,000 - $20,000",
-        openDate: "2026-02-01",
-        closeDate: "2026-08-31",
-        status: "open",
-        description: "Supports community-led projects addressing local environmental priorities.",
-        url: "https://www.dcceew.gov.au",
-        notes: "Annual round. Strong track record with Landcare.",
-        documents: []
-      },
-      {
-        id: 2,
-        name: "Indigenous Protected Areas (IPA) Program",
-        funder: "National Indigenous Australians Agency",
-        category: "indigenous",
-        eligibility: "aboriginal-only",
-        eligibilityDetails: "Traditional Owner groups, Aboriginal Land Councils. MUST have Native Title or cultural authority.",
-        assessmentCriteria: "Cultural authority (30%), conservation outcomes (25%), community benefit (25%), management capacity (20%).",
-        amount: "$50,000+",
-        openDate: "2026-01-01",
-        closeDate: "2026-10-15",
-        status: "open",
-        description: "Supports Traditional Owners to manage land and sea country.",
-        url: "https://www.niaa.gov.au",
-        notes: "Contact Aboriginal Land Council first.",
-        documents: []
-      },
-      {
-        id: 3,
-        name: "Future Drought Fund - Networks & Training",
-        funder: "Department of Agriculture",
-        category: "drought",
-        eligibility: "partnership",
-        eligibilityDetails: "Farming groups, NFPs, councils. INDIVIDUALS: Can participate via consortium.",
-        assessmentCriteria: "Drought resilience (35%), knowledge sharing (25%), network sustainability (20%), stakeholder engagement (20%).",
-        amount: "$10,000 - $100,000",
-        openDate: "2026-07-01",
-        closeDate: "2026-11-30",
-        status: "opening_soon",
-        description: "Builds community drought resilience through networks and events.",
-        url: "https://www.agriculture.gov.au",
-        notes: "Partnership option available. Perfect for your background.",
-        documents: []
-      },
-      {
-        id: 4,
-        name: "Local Land Services - Community Action",
-        funder: "North West Local Land Services",
-        category: "landcare",
-        eligibility: "partnership",
-        eligibilityDetails: "Community groups, Landcare. Individuals CAN apply if affiliated with Landcare.",
-        assessmentCriteria: "Environmental outcomes (30%), community engagement (25%), feasibility (25%), innovation (20%).",
-        amount: "$1,000 - $10,000",
-        openDate: "2026-04-01",
-        closeDate: "2026-07-31",
-        status: "open",
-        description: "Supports workshops, field days, and knowledge-sharing events.",
-        url: "https://www.lls.nsw.gov.au",
-        notes: "Your existing relationship is an advantage. Contact coordinator.",
-        documents: []
-      },
-      {
-        id: 5,
-        name: "Moree Plains Community Grants",
-        funder: "Moree Plains Shire Council",
-        category: "community",
-        eligibility: "individual",
-        eligibilityDetails: "Individuals, community groups, NFPs. LOCAL RESIDENTS ONLY. Council grants open to individuals.",
-        assessmentCriteria: "Community benefit (40%), feasibility (30%), local involvement (20%), innovation (10%).",
-        amount: "$500 - $5,000",
-        openDate: "2026-03-01",
-        closeDate: "2026-09-01",
-        status: "open",
-        description: "Council grants for local community initiatives.",
-        url: "https://www.mpsc.nsw.gov.au",
-        notes: "INDIVIDUAL ELIGIBLE. Annual rounds.",
-        documents: []
-      },
-      {
-        id: 6,
-        name: "Inverell Shire Community Development",
-        funder: "Inverell Shire Council",
-        category: "community",
-        eligibility: "individual",
-        eligibilityDetails: "Residents, community groups within Inverell Shire. Individuals can apply for small projects.",
-        assessmentCriteria: "Community need (35%), project viability (25%), local participation (25%), sustainability (15%).",
-        amount: "$500 - $3,000",
-        openDate: "2026-04-01",
-        closeDate: "2026-10-31",
-        status: "open",
-        description: "Small grants for local community initiatives.",
-        url: "https://www.inverell.nsw.gov.au",
-        notes: "INDIVIDUAL ELIGIBLE. Lower competition.",
-        documents: []
-      }
-    ];
+    // No built-in sample grants: the list starts empty and fills from Keep or Add Grant.
+    const initialGrants = [];
 
     // Templates
     const grantTemplates = [
@@ -993,6 +891,15 @@
 
     // State
     let grants = JSON.parse(localStorage.getItem('grants')) || initialGrants;
+
+    // Remove the old built-in sample grants (ids 1-6) from saved lists, unless they were moved into the pipeline or have documents.
+    (function removeSampleGrants() {
+      const samples = { 1: "Community Environment Program", 2: "Indigenous Protected Areas (IPA) Program", 3: "Future Drought Fund - Networks & Training", 4: "Local Land Services - Community Action", 5: "Moree Plains Community Grants", 6: "Inverell Shire Community Development" };
+      const before = grants.length;
+      grants = grants.filter(g => !(samples[g.id] === g.name && !g.fid &&
+        !['draft', 'submitted', 'funded', 'rejected'].includes(g.status) && !(g.documents && g.documents.length)));
+      if (grants.length !== before) { try { localStorage.setItem('grants', JSON.stringify(grants)); } catch {} }
+    })();
     let currentFilter = 'all';
     let currentTab = 'opportunities';
     let editingId = null;
@@ -1026,22 +933,26 @@
     }
     function isOpen(g) { return ['open', 'opening_soon'].includes(liveStatus(g)); }
     function isClosingSoon(g) {
+      if (!g.closeDate) return false;
       const days = getDaysUntil(g.closeDate);
       return liveStatus(g) === 'open' && days >= 0 && days <= 30;
     }
 
     function updateStats() {
+      // Grants waiting in the "New grants found" panel count too: they are open or opening soon.
+      const waiting = pendingFound();
       const openGrants = grants.filter(isOpen);
-      const open = openGrants.length;
-      const closing = grants.filter(isClosingSoon).length;
+      const open = openGrants.length + waiting.length;
+      const closing = grants.filter(isClosingSoon).length + waiting.filter(isClosingSoon).length;
       const total = grants.length;
-      const amounts = openGrants.map(g => {
+      const amounts = openGrants.concat(waiting).map(g => {
         const match = String(g.amount || '').match(/[\d,]+/g);
         return match ? parseInt(match[match.length - 1].replace(/,/g, '')) : 0;
       }).filter(a => a > 0);
       const avg = amounts.length ? Math.round(amounts.reduce((a,b) => a+b, 0) / amounts.length) : 0;
 
       document.getElementById('stat-open').textContent = open;
+      document.getElementById('stat-open-note').textContent = waiting.length ? 'incl. ' + waiting.length + ' new to review' : '';
       document.getElementById('stat-closing').textContent = closing;
       document.getElementById('stat-tracked').textContent = total;
       document.getElementById('stat-avg').textContent = '$' + avg.toLocaleString();
@@ -1662,6 +1573,7 @@ ${unsolicitedProposal.tips}`;
     }
 
     function renderFound() {
+      updateStats();
       const panel = document.getElementById('found-panel');
       const list = pendingFound().sort((a, b) => new Date(a.closeDate || '2999-12-31') - new Date(b.closeDate || '2999-12-31'));
       const when = foundUpdated ? new Date(foundUpdated).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
