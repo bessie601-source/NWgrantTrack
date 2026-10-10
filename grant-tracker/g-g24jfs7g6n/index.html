@@ -615,7 +615,7 @@
       </div>
       <div class="stat">
         <span class="stat-value" id="stat-avg">$0</span>
-        <span class="stat-label">Avg. Grant Size</span>
+        <span class="stat-label">Avg. Top Amount (open grants)</span>
       </div>
     </div>
   </div>
@@ -1003,15 +1003,27 @@
       setupEventListeners();
     }
 
+    // Work out where a grant really stands from its dates, so closed rounds stop counting as open.
+    // Pipeline statuses (draft, submitted, funded, rejected) are left as they are.
+    function liveStatus(g) {
+      if (['draft', 'submitted', 'funded', 'rejected', 'closed'].includes(g.status)) return g.status;
+      if (g.closeDate && getDaysUntil(g.closeDate) < 0) return 'closed';
+      if (g.openDate && getDaysUntil(g.openDate) > 0) return 'opening_soon';
+      return 'open';
+    }
+    function isOpen(g) { return ['open', 'opening_soon'].includes(liveStatus(g)); }
+    function isClosingSoon(g) {
+      const days = getDaysUntil(g.closeDate);
+      return liveStatus(g) === 'open' && days >= 0 && days <= 30;
+    }
+
     function updateStats() {
-      const open = grants.filter(g => ['open', 'opening_soon'].includes(g.status)).length;
-      const closing = grants.filter(g => {
-        const days = getDaysUntil(g.closeDate);
-        return ['open', 'closing_soon'].includes(g.status) && days <= 30 && days >= 0;
-      }).length;
+      const openGrants = grants.filter(isOpen);
+      const open = openGrants.length;
+      const closing = grants.filter(isClosingSoon).length;
       const total = grants.length;
-      const amounts = grants.map(g => {
-        const match = g.amount.match(/[\d,]+/g);
+      const amounts = openGrants.map(g => {
+        const match = String(g.amount || '').match(/[\d,]+/g);
         return match ? parseInt(match[match.length - 1].replace(/,/g, '')) : 0;
       }).filter(a => a > 0);
       const avg = amounts.length ? Math.round(amounts.reduce((a,b) => a+b, 0) / amounts.length) : 0;
@@ -1035,7 +1047,8 @@
       if (grant.status === 'rejected') return '<span class="badge badge-closed">Not Successful</span>';
       if (grant.status === 'submitted') return '<span class="badge badge-soon">Submitted</span>';
       if (grant.status === 'draft') return '<span class="badge badge-warning">Draft</span>';
-      if (days < 0) return '<span class="badge badge-closed">Closed</span>';
+      if (days < 0 || grant.status === 'closed') return '<span class="badge badge-closed">Closed</span>';
+      if (liveStatus(grant) === 'opening_soon') return '<span class="badge badge-soon">Opens ' + new Date(grant.openDate).toLocaleDateString('en-AU') + '</span>';
       if (days <= 7) return '<span class="badge badge-urgent">Closes in ' + days + ' days</span>';
       if (days <= 30) return '<span class="badge badge-warning">Closes in ' + days + ' days</span>';
       return '<span class="badge badge-open">Open</span>';
@@ -1066,16 +1079,18 @@
     function renderGrants() {
       let filtered = grants;
       if (currentFilter === 'open') {
-        filtered = grants.filter(g => ['open', 'opening_soon'].includes(g.status));
+        filtered = grants.filter(isOpen);
       } else if (currentFilter === 'closing') {
-        filtered = grants.filter(g => {
-          const days = getDaysUntil(g.closeDate);
-          return ['open', 'closing_soon'].includes(g.status) && days <= 30 && days >= 0;
-        });
+        filtered = grants.filter(isClosingSoon);
       } else if (currentFilter === 'eligible-individual') {
         filtered = grants.filter(g => ['individual', 'partnership'].includes(g.eligibility));
       }
-      filtered.sort((a, b) => new Date(a.closeDate) - new Date(b.closeDate));
+      // Soonest deadline first; closed rounds drop to the bottom (most recently closed first).
+      filtered = filtered.slice().sort((a, b) => {
+        const ca = liveStatus(a) === 'closed', cb = liveStatus(b) === 'closed';
+        if (ca !== cb) return ca ? 1 : -1;
+        return ca ? new Date(b.closeDate) - new Date(a.closeDate) : new Date(a.closeDate) - new Date(b.closeDate);
+      });
 
       if (filtered.length === 0) {
         grantList.innerHTML = '<div class="empty-state"><p>No grants match your filter</p></div>';
@@ -1252,7 +1267,8 @@
           ${dayGrants.map(g => {
             const daysLeft = getDaysUntil(g.closeDate);
             let cls = '';
-            if (daysLeft <= 7) cls = 'urgent';
+            if (daysLeft < 0) cls = '';
+            else if (daysLeft <= 7) cls = 'urgent';
             else if (daysLeft <= 30) cls = 'warning';
             return `<div class="calendar-event ${cls}" onclick="viewGrant(${g.id})" title="${g.name}">${g.name}</div>`;
           }).join('')}
@@ -1392,6 +1408,8 @@
           currentTab = tab.dataset.tab;
           document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
           document.getElementById(currentTab + '-view').style.display = 'block';
+          // The filters only apply to the Opportunities list, so hide them elsewhere.
+          document.querySelector('.filter-group').style.visibility = currentTab === 'opportunities' ? 'visible' : 'hidden';
         });
       });
 

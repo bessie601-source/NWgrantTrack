@@ -1,5 +1,5 @@
 // One Tree Locale Grants — offline support. Bump VERSION when the app changes.
-const VERSION = 'otl-grants-v1';
+const VERSION = 'otl-grants-v2';
 const SHELL = ['./', 'index.html', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png',
   'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-64.png'];
 
