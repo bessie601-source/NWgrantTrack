@@ -571,6 +571,18 @@
       line-height: 1.8;
     }
 
+    /* New grants found by the fortnightly search */
+    .found-panel { border-bottom: 2px solid var(--otl-sand); background: linear-gradient(90deg, white, var(--otl-pale-pink)); }
+    .found-head { padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+    .found-head h2 { font-size: 1.15rem; color: var(--otl-forest); }
+    .found-head small { color: var(--otl-muted); }
+    .found-item { padding: 1rem 1.5rem; border-top: 1px solid var(--otl-sand); display: grid; grid-template-columns: 1fr auto; gap: 1rem; }
+    .found-item .grant-description { margin: 0.35rem 0; }
+    .found-buttons { display: flex; gap: 0.5rem; align-items: flex-start; }
+    .badge-new { background: var(--otl-gold); color: white; }
+    .found-empty { padding: 0.75rem 1.5rem; font-size: 0.8rem; color: var(--otl-muted); border-bottom: 1px solid var(--otl-sand); }
+    @media (max-width: 768px) { .found-item { grid-template-columns: 1fr; } }
+
     .template-card .tip {
       margin-top: 1rem;
       padding: 0.875rem;
@@ -652,6 +664,7 @@
 
     <div class="card">
       <div id="opportunities-view" class="view">
+        <div id="found-panel"></div>
         <div class="grant-list" id="grant-list"></div>
       </div>
 
@@ -1633,7 +1646,101 @@ ${unsolicitedProposal.tips}`;
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
 
+    // ---- Grants found by the fortnightly Claude search (found-grants.json next to this page) ----
+    let foundGrants = [];
+    let foundUpdated = null;
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const safeUrl = u => /^https:\/\//i.test(u || '') ? u : '';
+    const cleanFid = f => String(f || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+    function getDismissed() { try { return JSON.parse(localStorage.getItem('dismissedFound')) || []; } catch { return []; } }
+
+    function pendingFound() {
+      const have = new Set(grants.map(g => g.fid).filter(Boolean));
+      const dismissed = new Set(getDismissed());
+      return foundGrants.filter(f => f.fid && !have.has(f.fid) && !dismissed.has(f.fid) &&
+        !(f.closeDate && getDaysUntil(f.closeDate) < 0));
+    }
+
+    function renderFound() {
+      const panel = document.getElementById('found-panel');
+      const list = pendingFound().sort((a, b) => new Date(a.closeDate || '2999-12-31') - new Date(b.closeDate || '2999-12-31'));
+      const when = foundUpdated ? new Date(foundUpdated).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      if (!list.length) {
+        panel.innerHTML = when ? `<div class="found-empty">No new grants waiting. Last search: ${esc(when)}.</div>` : '';
+        return;
+      }
+      panel.innerHTML = `<div class="found-panel">
+        <div class="found-head"><h2>New grants found (${list.length})</h2><small>Last search: ${esc(when)}. Check details on the official page before applying.</small></div>
+        ${list.map(f => {
+          const fid = cleanFid(f.fid);
+          const url = safeUrl(f.url);
+          return `<div class="found-item">
+            <div>
+              <div class="grant-header">
+                <span class="grant-title">${esc(f.name)}</span>
+                <span class="badge badge-new">New</span>
+                ${getCategoryBadge(esc(f.category || 'other'))}
+                ${getEligibilityBadge(esc(f.eligibility || 'nfp'))}
+              </div>
+              <span class="grant-funder">${esc(f.funder)}</span>
+              <p class="grant-description">${esc(f.description)}</p>
+              <div class="grant-meta">
+                ${f.amount ? `<span class="meta-item"><strong>${esc(f.amount)}</strong></span>` : ''}
+                <span class="meta-item">${f.closeDate ? 'Closes ' + esc(new Date(f.closeDate).toLocaleDateString('en-AU')) : 'Closing date not listed'}</span>
+                ${url ? `<span class="meta-item"><a href="${esc(url)}" target="_blank" rel="noopener">Official page</a></span>` : ''}
+              </div>
+              ${f.eligibilityDetails ? `<div class="grant-meta"><span class="meta-item">Who can apply: ${esc(f.eligibilityDetails)}</span></div>` : ''}
+            </div>
+            <div class="found-buttons">
+              <button class="btn btn-primary btn-small" onclick="keepFound('${fid}')">Keep</button>
+              <button class="btn btn-secondary btn-small" onclick="dismissFound('${fid}')">Dismiss</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    window.keepFound = function (fid) {
+      let f = foundGrants.find(x => cleanFid(x.fid) === fid);
+      if (!f) return;
+      // Search results come from the web: strip characters that could break or inject into the page.
+      const t = v => String(v == null ? '' : v).replace(/[<>"`]/g, '').replace(/'/g, '’');
+      f = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, k === 'fid' ? v : t(v)]));
+      grants.push({
+        id: Date.now(), fid: f.fid,
+        name: f.name || 'Untitled grant', funder: f.funder || '',
+        category: f.category || 'other', eligibility: f.eligibility || 'nfp',
+        eligibilityDetails: f.eligibilityDetails || '', assessmentCriteria: f.assessmentCriteria || '',
+        amount: f.amount || 'TBA', openDate: f.openDate || '', closeDate: f.closeDate || '',
+        status: 'open', description: f.description || '', url: safeUrl(f.url),
+        notes: f.notes || ('Found by grant search ' + (foundUpdated ? new Date(foundUpdated).toLocaleDateString('en-AU') : '')),
+        documents: []
+      });
+      localStorage.setItem('grants', JSON.stringify(grants));
+      updateStats(); renderGrants(); renderCalendar(); renderFound();
+    };
+
+    window.dismissFound = function (fid) {
+      const f = foundGrants.find(x => cleanFid(x.fid) === fid);
+      if (!f) return;
+      const d = getDismissed(); d.push(f.fid);
+      localStorage.setItem('dismissedFound', JSON.stringify(d));
+      renderFound();
+    };
+
+    async function loadFound() {
+      try {
+        const res = await fetch('found-grants.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        foundGrants = Array.isArray(data.grants) ? data.grants : [];
+        foundUpdated = data.updated || null;
+        renderFound();
+      } catch { /* offline or not published yet */ }
+    }
+
     init();
+    loadFound();
   </script>
 </body>
 </html>
