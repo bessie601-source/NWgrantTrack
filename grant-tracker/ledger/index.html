@@ -125,6 +125,67 @@ tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
 .modal-box .actions{justify-content:flex-end}
 .storage-warn{background:var(--warn-soft);border-color:var(--pink);color:var(--warn-ink)}
 #toast{z-index:10;bottom:calc(20px + env(safe-area-inset-bottom));max-width:calc(100% - 32px);text-align:center}
+#toast{z-index:40}
+textarea{font:inherit;font-size:15px;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);width:100%;resize:vertical}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.card-head h2{margin:0}
+.btn.sm{padding:7px 12px;font-size:13px}
+.modal-box.wide{max-width:520px;max-height:calc(100vh - 32px);overflow:auto}
+
+/* Statement of account: always printed-paper colours, whatever the phone's theme */
+.modal.stmt-wrap{display:block;overflow:auto;background:#e9e3ec;padding:0;z-index:30;color-scheme:light}
+.stmt-bar{position:sticky;top:0;z-index:2;display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--purple);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.stmt-bar .btn{background:#fff;color:var(--purple)} .stmt-bar .btn:hover{background:var(--pale-sage)}
+.stmt-bar .btn.close{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);margin-left:auto}
+.stmt-pages{padding:16px 12px calc(40px + env(safe-area-inset-bottom))}
+.stmt{background:#fff;color:#494258;max-width:780px;margin:0 auto 18px;border-radius:6px;box-shadow:0 2px 14px rgba(59,42,94,.18);font-size:13.5px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.stmt-top{background:linear-gradient(135deg,#3b2a5e 0%,#5d7c41 100%);color:#fff;padding:20px 24px 18px;display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;border-bottom:4px solid #d00670}
+.stmt-top img{width:58px;height:58px;border-radius:12px;background:#f2dee9;flex:none}
+.stmt-biz{display:flex;gap:14px;align-items:center}
+.stmt-biz b{font:700 22px 'Playfair Display',Georgia,serif;display:block;line-height:1.15}
+.stmt-biz small{color:#d0ddb9;font-size:12px;line-height:1.45;display:block}
+.stmt-title{text-align:right}
+.stmt-title b{font:700 19px 'Playfair Display',Georgia,serif;display:block;letter-spacing:.01em}
+.stmt-title span{font-size:12px;color:#d0ddb9}
+.stmt-body{padding:20px 24px 22px}
+.stmt-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.stmt-meta .lab{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#79447f;font-weight:600}
+.stmt-meta .to{font-weight:600;font-size:15px;color:#3b2a5e}
+.stmt-alert{background:#fbe3ef;border-left:4px solid #d00670;color:#96044f;padding:10px 14px;border-radius:4px;margin-bottom:16px;font-weight:500}
+.stmt-alert.ok{background:#e8efdc;border-left-color:#5d7c41;color:#3d5429}
+.stmt-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stmt-sum div{border:1px solid #d0ddb9;border-radius:8px;padding:9px 12px}
+.stmt-sum span{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#79447f;font-weight:600;display:block}
+.stmt-sum b{font:700 20px 'Playfair Display',Georgia,serif;color:#3b2a5e;font-variant-numeric:tabular-nums}
+.stmt-sum .hot{border-color:#d00670;background:#fff5fa} .stmt-sum .hot b{color:#96044f}
+.stmt h3{font:600 14px 'Playfair Display',Georgia,serif;color:#3b2a5e;margin:18px 0 6px}
+.stmt table{width:100%;border-collapse:collapse;font-size:12.5px}
+.stmt th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#79447f;font-weight:600;text-align:left;padding:6px 6px;border-bottom:1.5px solid #3b2a5e}
+.stmt td{padding:6px 6px;border-bottom:1px solid #ece6ef;vertical-align:top}
+.stmt .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stmt tfoot td{font-weight:700;color:#3b2a5e;border-bottom:none;border-top:1.5px solid #3b2a5e}
+.stmt .late{color:#96044f;font-weight:600} .stmt .soon{color:#3d5429}
+.stmt-aging td,.stmt-aging th{text-align:right} .stmt-aging .hot{color:#96044f;font-weight:700}
+.stmt-pay{background:#f7f3f9;border-radius:8px;padding:10px 14px;white-space:pre-wrap;margin-top:4px}
+.stmt-foot{margin-top:18px;font-size:12px;color:#79447f}
+@media (max-width:600px){
+  .stmt-top,.stmt-body{padding-left:14px;padding-right:14px}
+  .stmt-title{text-align:left}
+  .stmt-sum{grid-template-columns:1fr 1fr 1fr;gap:6px} .stmt-sum b{font-size:15px} .stmt-sum div{padding:7px 8px}
+  .stmt table{font-size:11.5px} .stmt th,.stmt td{padding:5px 3px}
+  .stmt .hide-sm{display:none}
+}
+@media print{
+  @page{margin:12mm}
+  body{background:#fff!important}
+  body>*:not(#stmt){display:none!important}
+  .modal.stmt-wrap{position:static;overflow:visible;background:#fff;padding:0}
+  .stmt-bar{display:none!important}
+  .stmt-pages{padding:0}
+  .stmt{box-shadow:none;border-radius:0;margin:0;max-width:none;break-after:page;page-break-after:always}
+  .stmt:last-child{break-after:auto;page-break-after:auto}
+  .stmt .hide-sm{display:table-cell!important}
+}
 </style>
 </head>
 <body>
@@ -147,7 +208,7 @@ tfoot td{font-weight:700;border-bottom:none;color:var(--head)}
 <div id="toast"></div>
 <script>
 const KEY='shop-ledger-v1';
-const blank=()=>({sales:[],purchases:[],customers:[],custPayments:[],loans:[],loanPayments:[],loanDraws:[]});
+const blank=()=>({sales:[],purchases:[],customers:[],custPayments:[],loans:[],loanPayments:[],loanDraws:[],settings:{}});
 /* (Runs before the helpers below are defined, so it uses no uid()/today().)
    Loans are one running account per lender: money borrowed (loanDraws) adds to it, repayments come off it.
    Older data kept the amount borrowed on each loan and could have several loans per lender; fold those in. */
@@ -199,6 +260,31 @@ const loanPaid=l=>S.loanPayments.filter(p=>p.loanId===l.id);
 const loanDrawn=l=>S.loanDraws.filter(x=>x.loanId===l.id);
 const loanBorrowed=l=>(+l.principal||0)+sum(loanDrawn(l),'amount');
 const loanBal=l=>loanBorrowed(l)-sum(loanPaid(l),'amount');
+
+/* ---------- Overdue accounts & statements ---------- */
+const sett=()=>(S.settings&&typeof S.settings==='object')?S.settings:(S.settings={});
+const isNum=v=>v!==''&&v!=null&&isFinite(+v);
+const defaultTerms=()=>isNum(sett().terms)?+sett().terms:30;
+const termsFor=c=>c&&isNum(c.terms)?+c.terms:defaultTerms();
+const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10);};
+const daysFrom=(a,b)=>Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5);
+const r2=n=>Math.round(n*100)/100;
+/* Repayments pay off the oldest credit sales first. Each unpaid sale is due `terms` days after the sale. */
+function aging(id,asOf=today()){
+  const c=S.customers.find(c=>c.id===id),terms=termsFor(c);
+  const sales=S.sales.filter(x=>x.customerId===id&&x.pay==='credit').sort((a,b)=>a.date.localeCompare(b.date)||(a.id>b.id?1:-1));
+  let left=sum(S.custPayments.filter(x=>x.customerId===id),'amount');
+  const items=[];
+  for(const s of sales){const used=Math.min(left,+s.amount);left=r2(left-used);const owing=r2(s.amount-used);
+    if(owing>0.004){const due=addDays(s.date,terms);items.push({...s,owing,due,over:daysFrom(due,asOf)});}}
+  const buckets=[0,0,0,0,0]; // not yet due, 1–30, 31–60, 61–90, 90+ days overdue
+  items.forEach(i=>{buckets[i.over<=0?0:i.over<=30?1:i.over<=60?2:i.over<=90?3:4]+=i.owing;});
+  const overdue=r2(buckets[1]+buckets[2]+buckets[3]+buckets[4]);
+  return{terms,items,buckets:buckets.map(r2),overdue,credit:left>0.004?left:0,balance:r2(custBal(id)),
+    oldest:items.reduce((m,i)=>Math.max(m,i.over),0)};
+}
+const overdueAccounts=()=>S.customers.map(c=>({c,a:aging(c.id)})).filter(x=>x.a.overdue>0.004).sort((x,y)=>y.a.overdue-x.a.overdue);
+const daysTxt=n=>`${n} day${n===1?'':'s'}`;
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);}
 
 function periodRange(){
@@ -238,6 +324,7 @@ function vDash(){
   const debt=S.loans.reduce((t,l)=>t+Math.max(0,loanBal(l)),0);
   const debtors=S.customers.map(c=>({...c,bal:custBal(c.id)})).filter(c=>c.bal>0.004).sort((x,y)=>y.bal-x.bal);
   const over=debtors.filter(c=>+c.limit>0&&c.bal>+c.limit);
+  const od=overdueAccounts();
   const P=[['month','This month'],['last','Last month'],['fy','This financial year'],['all','All time']];
   return `<div class="periods">${P.map(([k,l])=>`<button data-act="period" data-p="${k}" class="${period===k?'on':''}">${l}</button>`).join('')}</div>
   <div class="grid">
@@ -252,8 +339,10 @@ function vDash(){
   </div>
   <div class="grid">
     ${stat('Customers owe you',money(owed),`${debtors.length} account${debtors.length===1?'':'s'} with a balance`)}
+    ${stat('Overdue',money(od.reduce((t,x)=>t+x.a.overdue,0)),od.length?`${od.length} account${od.length===1?'':'s'} past due`:'Nothing past due',od.length?'bad':'good')}
     ${stat('Loan balance left',money(debt),`${S.loans.length} loan${S.loans.length===1?'':'s'}`)}
   </div>
+  ${od.length?`<div class="card"><div class="card-head"><h2>Overdue accounts</h2><button class="btn sm" data-act="stmtall">Create statements (${od.length})</button></div>${overdueTable(od.slice(0,8))}</div>`:''}
   ${over.length?`<div class="card"><h2>Over credit limit</h2>${table(['Customer','Limit','Owes'],over.map(c=>[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,money(+c.limit),`<span class="pill bad">${money(c.bal)}</span>`]),[1,2])}</div>`:''}
   <div class="card"><h2>Who owes the most</h2>${debtors.length?table(['Customer','Owes','Limit'],debtors.slice(0,8).map(c=>[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,money(c.bal),+c.limit?money(+c.limit):'—']),[1,2]):empty('No one owes you anything right now.')}</div>
   <p class="note">Income is counted when money is received: sales paid on the spot, plus repayments from credit customers. A credit sale isn’t income until the customer pays it off. Profit = income received − purchases. Loan repayments reduce what you owe and show in net cash, but aren’t counted as an expense.</p>`;
@@ -290,11 +379,20 @@ function vPurchases(){
   ${rows.length?table(['Date','Paid to','Description','Category','Amount',''],rows.map(x=>[fmtDate(x.date),esc(supplierName(x)),esc(x.desc),esc(x.cat),money(x.amount),del('purchases',x.id)]),[4],['','','','Total',money(sum(rows,'amount')),'']):empty('No purchases yet.')}</div>`;
 }
 
+const overdueTable=list=>table(['Customer','Overdue','Oldest','Owes in total','Statement'],list.map(({c,a})=>[
+  `<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,`<span class="pill bad">${money(a.overdue)}</span>`,
+  `${daysTxt(a.oldest)} late`,money(a.balance),`<button class="btn ghost sm" data-act="stmt" data-id="${c.id}">Create</button>`]),[1,3]);
 const hasCredit=c=>+c.limit>0||S.sales.some(x=>x.customerId===c.id&&x.pay==='credit')||S.custPayments.some(x=>x.customerId===c.id);
 function vCustomers(){
   if(openCust&&S.customers.find(c=>c.id===openCust))return vCustomer(openCust);
-  const list=S.customers.filter(hasCredit).map(c=>({...c,bal:custBal(c.id)})).sort((a,b)=>b.bal-a.bal||a.name.localeCompare(b.name));
-  return `<div class="card"><h2>Take a repayment</h2>
+  const list=S.customers.filter(hasCredit).map(c=>({...c,bal:custBal(c.id),od:aging(c.id).overdue})).sort((a,b)=>b.bal-a.bal||a.name.localeCompare(b.name));
+  const od=overdueAccounts(),st=sett();
+  return `<div class="card"><div class="card-head"><h2>Overdue accounts <span class="muted">· ${od.length}</span></h2>
+    ${od.length?`<button class="btn sm" data-act="stmtall">Create statements for all (${od.length})</button>`:''}</div>
+  ${od.length?overdueTable(od):empty('No accounts are overdue. 🎉')}
+  <p class="note">A credit sale is overdue once it’s more than ${daysTxt(defaultTerms())} old and still unpaid. Repayments pay off the oldest sales first. <button class="link" data-act="stmtset">Change payment terms &amp; statement details</button></p></div>
+  ${list.length&&!st.payDetails?`<div class="card storage-warn" style="font-size:14px">Add your bank or payment details so they print on statements. <button class="link" data-act="stmtset">Add them now</button></div>`:''}
+  <div class="card"><h2>Take a repayment</h2>
   ${S.customers.length?`<form class="row" data-form="custpay">
     <label>Date<input type="date" name="date" value="${today()}" required></label>
     <label>Customer<select name="customerId" required data-contact>${contactOptions('Choose customer',true)}</select></label>
@@ -303,11 +401,11 @@ function vCustomers(){
     <button type="button" class="btn" data-submit>Record repayment</button>
   </form>`:empty('Add your customers on the Contacts tab first.')}</div>
   <div class="card"><h2>Credit accounts <span class="muted">· ${list.length}</span></h2>
-  ${list.length?table(['Customer','Phone','Limit','Owes','Available'],list.map(c=>{
+  ${list.length?table(['Customer','Phone','Limit','Owes','Overdue','Available'],list.map(c=>{
     const lim=+c.limit||0,overL=lim&&c.bal>lim;
     return[`<button class="link" data-act="cust" data-id="${c.id}">${esc(c.name)}</button>`,esc(c.phone),lim?money(lim):'—',
-      c.bal>0.004?`<span class="pill ${overL?'bad':'warn'}">${money(c.bal)}</span>`:money(c.bal),lim?money(lim-c.bal):'—'];
-  }),[2,3,4],['Total','','',money(list.reduce((t,c)=>t+Math.max(0,c.bal),0)),'']):empty('No one has bought on credit yet.')}
+      c.bal>0.004?`<span class="pill ${overL?'bad':'warn'}">${money(c.bal)}</span>`:money(c.bal),c.od>0.004?`<span class="pill bad">${money(c.od)}</span>`:'—',lim?money(lim-c.bal):'—'];
+  }),[2,3,4,5],['Total','','',money(list.reduce((t,c)=>t+Math.max(0,c.bal),0)),money(list.reduce((t,c)=>t+c.od,0)),'']):empty('No one has bought on credit yet.')}
   <p class="note">Anyone on your contact list can buy on credit — choose “On credit” when recording their sale. To set a credit limit, open the contact and edit it.</p></div>`;
 }
 
@@ -336,7 +434,7 @@ function vContacts(){
 }
 
 function vCustomer(id){
-  const c=S.customers.find(c=>c.id===id),bal=custBal(id),lim=+c.limit||0;
+  const c=S.customers.find(c=>c.id===id),bal=custBal(id),lim=+c.limit||0,ag=aging(id);
   const ev=[...S.sales.filter(x=>x.customerId===id&&x.pay==='credit').map(x=>({...x,k:'sale',coll:'sales'})),
             ...S.custPayments.filter(x=>x.customerId===id).map(x=>({...x,k:'pay',coll:'custPayments'}))]
            .sort((a,b)=>a.date.localeCompare(b.date)||(a.id>b.id?1:-1));
@@ -350,7 +448,7 @@ function vCustomer(id){
   return `<p><button class="link" data-act="back">← Back to ${tab==='contacts'?'contacts':'credit accounts'}</button></p>
   <div class="card"><h2 style="margin-bottom:2px">${esc(c.name)}</h2>
     ${contactLine?`<div class="muted">${contactLine}</div>`:''}${c.notes?`<p class="note">${esc(c.notes)}</p>`:''}</div>
-  <div class="grid">${stat('Owes you',money(bal),'',bal>0.004?'bad':'good')}
+  <div class="grid">${stat('Owes you',money(bal),ag.overdue>0.004?`${money(ag.overdue)} overdue`:bal>0.004?'Nothing overdue':'',bal>0.004?'bad':'good')}
   ${stat('Credit limit',lim?money(lim):'None',lim?`${money(lim-bal)} available`:'')}
   ${stat('Sold to them',money(sum(sales,'amount')),`${sales.length} sale${sales.length===1?'':'s'}`)}
   ${stat('Bought from them',money(sum(purch,'amount')),`${purch.length} purchase${purch.length===1?'':'s'}`)}</div>
@@ -360,7 +458,8 @@ function vCustomer(id){
     <label>Amount ($)<input name="amount" type="text" inputmode="decimal" autocomplete="off" required></label>
     <label>Note<input name="note" placeholder="Optional"></label>
     <button type="button" class="btn" data-submit>Record repayment</button></form></div>
-  <div class="card"><h2>Credit statement</h2>${rows.length?table(['Date','Type','Detail','Charged','Paid','Balance',''],rows,[3,4,5]):empty('No credit activity yet.')}</div>
+  <div class="card"><div class="card-head"><h2>Credit statement</h2>${rows.length?`<button class="btn sm${ag.overdue>0.004?'':' ghost'}" data-act="stmt" data-id="${id}">Create statement</button>`:''}</div>
+  ${ag.overdue>0.004?`<p class="note" style="margin:-4px 0 10px"><span class="pill bad">${money(ag.overdue)} overdue</span> oldest unpaid sale is ${daysTxt(ag.oldest)} past due · terms ${daysTxt(ag.terms)}</p>`:''}${rows.length?table(['Date','Type','Detail','Charged','Paid','Balance',''],rows,[3,4,5]):empty('No credit activity yet.')}</div>
   <div class="card"><h2>Sales to ${esc(c.name)}</h2>${sales.length?table(['Date','Description','Payment','Amount'],sales.map(x=>[fmtDate(x.date),esc(x.desc),x.pay==='credit'?'<span class="pill warn">Credit</span>':'<span class="pill">Paid</span>',money(x.amount)]),[3]):empty('No sales yet.')}</div>
   <div class="card"><h2>Purchases from ${esc(c.name)}</h2>${purch.length?table(['Date','Description','Category','Amount'],purch.map(x=>[fmtDate(x.date),esc(x.desc),esc(x.cat),money(x.amount)]),[3]):empty('No purchases yet.')}</div>
   <div class="card"><h2>Edit contact</h2><form class="row" data-form="custedit">
@@ -370,6 +469,7 @@ function vCustomer(id){
     <label>Email<input name="email" type="email" value="${esc(c.email)}"></label>
     <label>Notes<input name="notes" value="${esc(c.notes)}"></label>
     <label>Credit limit ($)<input name="limit" type="text" inputmode="decimal" autocomplete="off" value="${lim||''}" placeholder="Blank = no limit"></label>
+    <label>Payment terms (days)<input name="terms" type="text" inputmode="numeric" autocomplete="off" value="${isNum(c.terms)?+c.terms:''}" placeholder="Blank = usual (${defaultTerms()})"></label>
     <button type="button" class="btn" data-submit>Save</button></form>
     <p class="note"><button class="link" data-act="delcust" data-id="${id}">Delete this contact</button></p></div>`;
 }
@@ -449,7 +549,8 @@ const handlers={
   async customer(d){const name=d.name.trim();if(!name)return;
     if(S.customers.some(c=>c.name.toLowerCase()===name.toLowerCase())&&!await ask(`You already have a contact called ${name}. Add another one?`))return;
     S.customers.push({id:uid(),name,phone:d.phone.trim(),email:(d.email||'').trim(),notes:(d.notes||'').trim(),limit:amt(d.limit)});return 'Contact added';},
-  custedit(d){const c=S.customers.find(c=>c.id===d.id);Object.assign(c,{name:d.name.trim(),phone:d.phone.trim(),email:(d.email||'').trim(),notes:(d.notes||'').trim(),limit:amt(d.limit)});return 'Saved';},
+  custedit(d){const c=S.customers.find(c=>c.id===d.id);const t=String(d.terms||'').replace(/[^0-9]/g,'');
+    Object.assign(c,{name:d.name.trim(),phone:d.phone.trim(),email:(d.email||'').trim(),notes:(d.notes||'').trim(),limit:amt(d.limit),terms:t===''?'':+t});return 'Saved';},
   async custpay(d){const amount=amt(d.amount);if(!d.customerId||d.customerId==='__new')return toast('Choose a customer');if(amount<=0)return toast('Enter an amount');
     const bal=custBal(d.customerId);
     if(amount>bal+0.004&&!await ask(`${custName(d.customerId)} only owes ${money(bal)}. Record ${money(amount)} anyway (leaves them in credit)?`))return;
@@ -516,6 +617,9 @@ document.addEventListener('click',async e=>{
     } else {l.lender=name.trim();save();render();toast('Renamed');}
   }
   else if(act==='edit')editEntry(b.dataset.coll,b.dataset.id);
+  else if(act==='stmt')openStatements([b.dataset.id]);
+  else if(act==='stmtall')openStatements(overdueAccounts().map(x=>x.c.id));
+  else if(act==='stmtset')statementSettings();
   else if(act==='export')download(`one-tree-locale-backup-${today()}.json`,JSON.stringify(S,null,2),'application/json');
   else if(act==='import')$('#importFile').click();
   else if(act==='csv')exportCsv();
@@ -711,6 +815,123 @@ async function importCsv(text){
   S.customers.push(...newContacts);S.loans.push(...newLoans);
   for(const k in add)S[k].push(...add[k]);
   save();render();toast(`Imported ${n} transactions`);
+}
+
+/* ---------- Statements of account ---------- */
+const fmtLong=d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});
+function statementHtml(id){
+  const c=S.customers.find(c=>c.id===id);if(!c)return '';
+  const a=aging(id),st=sett(),d=today(),biz=st.bizName||'One Tree Locale';
+  const since=addDays(d,-90);
+  const pays=S.custPayments.filter(p=>p.customerId===id&&p.date>=since&&p.date<=d).sort(byDateDesc);
+  const bizLines=[st.abn?'ABN '+st.abn:'',st.address,[st.phone,st.email].filter(Boolean).join(' · ')].filter(Boolean).map(esc).join('<br>');
+  const toLines=[c.phone,c.email].filter(Boolean).map(esc).join('<br>');
+  const due0=a.buckets[0];
+  const alert=a.overdue>0.004
+    ?`<div class="stmt-alert">Your account is overdue. ${money(a.overdue)} is past its due date — the oldest by ${daysTxt(a.oldest)}. Please pay the overdue amount as soon as possible.</div>`
+    :a.balance>0.004?`<div class="stmt-alert ok">Thank you — nothing on your account is overdue.</div>`
+    :`<div class="stmt-alert ok">Your account is fully paid. Thank you!</div>`;
+  const status=i=>i.over>0?`<span class="late">${daysTxt(i.over)} overdue</span>`:i.over===0?'<span class="late">Due today</span>':`<span class="soon">Due in ${daysTxt(-i.over)}</span>`;
+  const items=a.items.map(i=>`<tr><td>${fmtDate(i.date)}</td><td>${esc(i.desc)||'Sale'}</td><td class="num hide-sm">${money(+i.amount)}</td><td class="num">${money(i.owing)}</td><td class="hide-sm">${fmtDate(i.due)}</td><td>${status(i)}</td></tr>`).join('');
+  const B=['Not yet due','1–30 days','31–60 days','61–90 days','90+ days'];
+  return `<article class="stmt">
+  <div class="stmt-top">
+    <div class="stmt-biz"><img src="icons/icon-192.png" alt=""><div><b>${esc(biz)}</b><small>${bizLines}</small></div></div>
+    <div class="stmt-title"><b>Statement of account</b><span>${fmtLong(d)}</span></div>
+  </div>
+  <div class="stmt-body">
+    <div class="stmt-meta">
+      <div><div class="lab">Statement for</div><div class="to">${esc(c.name)}</div><div>${toLines}</div></div>
+      <div style="text-align:right"><div class="lab">Payment terms</div><div>${a.terms?`${daysTxt(a.terms)} from date of sale`:'Due on the day of sale'}</div></div>
+    </div>
+    ${alert}
+    <div class="stmt-sum">
+      <div class="${a.overdue>0.004?'hot':''}"><span>Overdue now</span><b>${money(a.overdue)}</b></div>
+      <div><span>Not yet due</span><b>${money(due0)}</b></div>
+      <div><span>Total owing</span><b>${money(Math.max(0,a.balance))}</b></div>
+    </div>
+    ${a.items.length?`<h3>Unpaid sales</h3>
+    <table><thead><tr><th>Date</th><th>Description</th><th class="num hide-sm">Amount</th><th class="num">Still owing</th><th class="hide-sm">Due</th><th>Status</th></tr></thead>
+    <tbody>${items}</tbody><tfoot><tr><td></td><td>Total owing</td><td class="hide-sm"></td><td class="num">${money(a.items.reduce((t,i)=>t+i.owing,0))}</td><td class="hide-sm"></td><td></td></tr></tfoot></table>
+    <h3>How old the balance is</h3>
+    <table class="stmt-aging"><thead><tr>${B.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+    <tbody><tr>${a.buckets.map((v,k)=>`<td class="num${k&&v>0.004?' hot':''}">${money(v)}</td>`).join('')}</tr></tbody></table>`:''}
+    ${a.credit>0.004?`<p>You have ${money(a.credit)} in credit on your account. Thank you!</p>`:''}
+    <h3>Payments received in the last 90 days</h3>
+    ${pays.length?`<table><thead><tr><th>Date</th><th>Note</th><th class="num">Amount</th></tr></thead><tbody>${pays.map(p=>`<tr><td>${fmtDate(p.date)}</td><td>${esc(p.note)}</td><td class="num">${money(+p.amount)}</td></tr>`).join('')}</tbody></table>`:'<p style="margin:4px 0">No payments received in the last 90 days.</p>'}
+    ${st.payDetails?`<h3>How to pay</h3><div class="stmt-pay">${esc(st.payDetails)}${a.overdue>0.004?`\nPlease use “${esc(c.name)}” as the reference.`:''}</div>`:''}
+    <p class="stmt-foot">${esc(st.footer||'If you’ve paid recently, thank you, and please disregard this statement. Any questions, just get in touch.')}</p>
+  </div></article>`;
+}
+function statementText(id){
+  const c=S.customers.find(c=>c.id===id),a=aging(id),st=sett(),biz=st.bizName||'One Tree Locale';
+  const L=[`Hi ${c.name},`,'',`Here is your statement from ${biz} as at ${fmtDate(today())}.`,''];
+  if(a.overdue>0.004)L.push(`Overdue now: ${money(a.overdue)} (oldest ${daysTxt(a.oldest)} past due)`);
+  L.push(`Total owing: ${money(Math.max(0,a.balance))}`);
+  if(a.items.length){L.push('','Unpaid sales:');a.items.forEach(i=>L.push(`• ${fmtDate(i.date)} ${i.desc||'Sale'} — ${money(i.owing)} ${i.over>0?`(${daysTxt(i.over)} overdue)`:`(due ${fmtDate(i.due)})`}`));}
+  if(st.payDetails)L.push('','How to pay:',st.payDetails);
+  L.push('',st.footer||'If you’ve paid recently, thank you, and please disregard this. Any questions, just get in touch.','',`Thanks,`,biz);
+  return L.join('\n');
+}
+function openStatements(ids){
+  ids=ids.filter(id=>S.customers.some(c=>c.id===id));if(!ids.length)return toast('No statements to create');
+  document.querySelectorAll('.stmt-wrap').forEach(m=>m.remove());
+  const one=ids.length===1,c=one&&S.customers.find(c=>c.id===ids[0]);
+  const o=document.createElement('div');o.className='modal stmt-wrap';o.id='stmt';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
+  o.innerHTML=`<div class="stmt-bar">
+    <button type="button" class="btn sm" data-s="print">${one?'Print / PDF':`Print all ${ids.length} / PDF`}</button>
+    ${one?`<button type="button" class="btn sm" data-s="share">Share</button>`:''}
+    ${one&&c.email?`<button type="button" class="btn sm" data-s="email">Email</button>`:''}
+    ${one&&c.phone?`<button type="button" class="btn sm" data-s="sms">Text</button>`:''}
+    <button type="button" class="btn sm close" data-s="close">Close</button></div>
+    <div class="stmt-pages">${ids.map(statementHtml).join('')}</div>`;
+  const oldTitle=document.title;
+  // The PDF file name comes from the page title
+  document.title=one?`Statement - ${c.name} - ${today()}`:`Overdue statements - ${today()}`;
+  let pushed=false;try{history.pushState({otl:1,tab,openCust,stmt:1},'');pushed=true;}catch(e){}
+  const close=()=>{document.title=oldTitle;document.removeEventListener('keydown',key,true);
+    if(pushed&&history.state&&history.state.stmt)history.back();else o.remove();};
+  const key=e=>{if(e.key==='Escape'&&document.contains(o)){e.stopPropagation();close();}};
+  const text=()=>statementText(ids[0]);
+  o.addEventListener('click',async e=>{const b=e.target.closest('[data-s]');if(!b)return;const s=b.dataset.s;
+    if(s==='close')close();
+    else if(s==='print')window.print();
+    else if(s==='share'){const t=text();
+      if(navigator.share){navigator.share({title:`Statement for ${c.name}`,text:t}).catch(()=>{});}
+      else{try{await navigator.clipboard.writeText(t);toast('Statement copied — paste it into a message');}catch(err){toast('Couldn’t share from this browser');}}}
+    else if(s==='email')location.href=`mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(`Statement of account – ${sett().bizName||'One Tree Locale'}`)}&body=${encodeURIComponent(text())}`;
+    else if(s==='sms')location.href=`sms:${encodeURIComponent(c.phone.replace(/[^0-9+]/g,''))}?body=${encodeURIComponent(text())}`;
+  });
+  // If the back button closes it, put the title back
+  const obs=new MutationObserver(()=>{if(!document.contains(o)){document.title=oldTitle;document.removeEventListener('keydown',key,true);obs.disconnect();}});
+  obs.observe(document.body,{childList:true});
+  document.addEventListener('keydown',key,true);document.body.appendChild(o);o.scrollTop=0;
+}
+function statementSettings(){
+  const st=sett();
+  const o=document.createElement('div');o.className='modal';
+  const f=(k,label,ph='',extra='')=>`<label>${label}<input data-f="${k}" value="${esc(st[k]||'')}" placeholder="${esc(ph)}" ${extra}></label>`;
+  o.innerHTML=`<div class="modal-box wide" role="dialog" aria-modal="true"><h2>Payment terms &amp; statement details</h2>
+    <div style="display:grid;gap:10px;margin-bottom:16px">
+      <label>Usual payment terms (days)<input data-f="terms" inputmode="numeric" value="${defaultTerms()}"></label>
+      <p class="note" style="margin:-4px 0 4px">How long customers have to pay for a credit sale before it counts as overdue. You can set different terms for one customer on their contact page.</p>
+      ${f('bizName','Business name','One Tree Locale')}
+      ${f('abn','ABN','Optional','inputmode="numeric"')}
+      ${f('address','Address','Optional')}
+      ${f('phone','Phone','Optional','type="tel"')}
+      ${f('email','Email','Optional','type="email"')}
+      <label>How to pay<textarea data-f="payDetails" rows="4" placeholder="e.g. Bank transfer to One Tree Locale&#10;BSB 000-000  Account 00000000">${esc(st.payDetails||'')}</textarea></label>
+      <label>Note at the bottom<textarea data-f="footer" rows="2" placeholder="If you’ve paid recently, thank you, and please disregard this statement. Any questions, just get in touch.">${esc(st.footer||'')}</textarea></label>
+    </div>
+    <div class="actions"><button type="button" class="btn ghost" data-a="0">Cancel</button><button type="button" class="btn" data-a="1">Save</button></div></div>`;
+  const v=k=>o.querySelector(`[data-f="${k}"]`).value.trim();
+  const close=()=>{o.remove();document.removeEventListener('keydown',key,true);};
+  const key=e=>{if(e.key==='Escape'){e.stopPropagation();close();}};
+  o.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(b.dataset.a!=='1')return close();
+    const t=v('terms').replace(/[^0-9]/g,'');
+    S.settings=Object.assign(sett(),{terms:t===''?30:+t,bizName:v('bizName'),abn:v('abn'),address:v('address'),phone:v('phone'),email:v('email'),payDetails:v('payDetails'),footer:v('footer')});
+    save();close();render();toast('Saved');});
+  document.addEventListener('keydown',key,true);document.body.appendChild(o);o.querySelector('[data-f=terms]').focus();
 }
 
 /* Phone back button: step back through screens the person visited; from the first screen, back closes the app */
